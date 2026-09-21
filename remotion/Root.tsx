@@ -1,3 +1,4 @@
+import './index.css';
 import { Composition } from 'remotion';
 import { VERTICAL_9_16 } from '../src/config.ts';
 import { Video } from './Video.tsx';

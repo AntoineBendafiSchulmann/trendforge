@@ -1,8 +1,8 @@
 # TrendForge
 
 Générateur local de vidéos courtes verticales (9:16), destinées à être publiées
-manuellement. Seul le socle technique est en place pour l'instant : le pipeline de
-génération n'est pas encore écrit.
+manuellement. Pour l'instant il ne rend qu'une composition de démonstration : le
+pipeline (script, narration, sous-titres) reste à écrire.
 
 ## Prérequis
 
@@ -18,9 +18,12 @@ npm ci
 ## Commandes
 
 ```bash
-npm run generate      # point d'entrée du générateur
+npm run generate      # rend output/video-001.mp4 (1080x1920, 30 fps, H.264)
 npm run typecheck
 npm run lint
 npm run format        # npm run format:check pour vérifier sans modifier
 npm test
 ```
+
+Le premier `npm run generate` télécharge Chrome Headless Shell (~113 Mo) dans
+`node_modules/`. Le fichier de sortie est écrasé à chaque génération.

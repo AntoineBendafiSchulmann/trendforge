@@ -4,14 +4,8 @@ export const Video = () => {
   const frame = useCurrentFrame();
 
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: '#0b0b0f',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <span style={{ color: '#ffffff', fontFamily: 'sans-serif', fontSize: 96 }}>{frame}</span>
+    <AbsoluteFill className="items-center justify-center bg-zinc-950">
+      <span className="font-sans text-8xl text-white">{frame}</span>
     </AbsoluteFill>
   );
 };
