@@ -2,42 +2,45 @@
   "scenes": [
     {
       "type": "hook",
-      "kicker": "TRENDFORGE",
-      "text": "Le moteur visuel a maintenant un langage.",
-      "durationInSeconds": 2.5
-    },
-    {
-      "type": "statement",
-      "text": "Le JSON décrit l'intention.",
-      "subtext": "Le moteur décide du design.",
+      "kicker": "ET SI...",
+      "text": "Une ville entière tenait dans une seule tour ?",
+      "media": { "type": "image", "src": "demo/light-landscape.jpg" },
       "durationInSeconds": 3
     },
     {
+      "type": "statement",
+      "text": "Chaque étage aurait son propre quartier.",
+      "subtext": "Logements, commerces, jardins et lieux de travail.",
+      "durationInSeconds": 3
+    },
+    {
+      "type": "statement",
+      "text": "Plus besoin de traverser la ville.",
+      "subtext": "Tout serait accessible en quelques minutes.",
+      "media": { "type": "image", "src": "demo/mid-square.jpg" },
+      "durationInSeconds": 3.5
+    },
+    {
       "type": "stat",
-      "value": "4",
-      "label": "types de scènes",
-      "caption": "hook · statement · stat · comparison",
+      "value": "1",
+      "label": "ville verticale",
+      "caption": "des dizaines de quartiers superposés",
       "durationInSeconds": 3
     },
     {
       "type": "comparison",
-      "label": "Ce qui a changé",
+      "label": "Deux façons de penser la ville",
       "items": [
-        {
-          "label": "Avant",
-          "value": "1 rendu"
-        },
-        {
-          "label": "Après",
-          "value": "4 rendus"
-        }
+        { "label": "Horizontale", "value": "s'étendre" },
+        { "label": "Verticale", "value": "s'élever" }
       ],
       "durationInSeconds": 3.5
     },
     {
       "type": "statement",
-      "text": "Reste à lui donner de quoi parler.",
-      "durationInSeconds": 2
+      "text": "Une ville peut-elle vraiment pousser vers le ciel ?",
+      "media": { "type": "image", "src": "demo/deep-portrait.jpg" },
+      "durationInSeconds": 2.5
     }
   ]
 }

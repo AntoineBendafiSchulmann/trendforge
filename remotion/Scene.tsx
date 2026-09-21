@@ -1,5 +1,6 @@
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import type { Scene as SceneData } from '../src/content.ts';
+import type { Media, Scene as SceneData } from '../src/content.ts';
+import { MediaBackground } from './MediaBackground.tsx';
 import { ComparisonScene } from './scenes/ComparisonScene.tsx';
 import { HookScene } from './scenes/HookScene.tsx';
 import { StatementScene } from './scenes/StatementScene.tsx';
@@ -7,6 +8,9 @@ import { StatScene } from './scenes/StatScene.tsx';
 
 const ENTER_FRAMES = 8;
 const EXIT_FRAMES = 8;
+
+const mediaOf = (scene: SceneData): Media | undefined =>
+  scene.type === 'hook' || scene.type === 'statement' ? scene.media : undefined;
 
 const renderScene = (scene: SceneData) => {
   switch (scene.type) {
@@ -30,6 +34,7 @@ export const Scene = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const media = mediaOf(scene);
 
   const lift = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 15 });
   const enter = interpolate(frame, [0, ENTER_FRAMES], [0, 1], { extrapolateRight: 'clamp' });
@@ -40,8 +45,13 @@ export const Scene = ({
 
   return (
     <AbsoluteFill className="items-center justify-center overflow-hidden px-16 pt-[12%] pb-[22%]">
+      {media === undefined ? null : (
+        <AbsoluteFill style={{ opacity: enter * exit }}>
+          <MediaBackground media={media} durationInFrames={durationInFrames} />
+        </AbsoluteFill>
+      )}
       <div
-        className="flex w-full max-w-[900px] flex-col items-center gap-8 text-center"
+        className="relative flex w-full max-w-[900px] flex-col items-center gap-8 text-center"
         style={{ opacity: enter * exit, transform: `translateY(${(1 - lift) * 40}px)` }}
       >
         {renderScene(scene)}

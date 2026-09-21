@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import demoContent from '../content/demo.json' with { type: 'json' };
 import {
+  isPathInsideRoot,
   sceneDurationsInFrames,
   secondsToFrames,
   totalDurationInFrames,
@@ -102,7 +103,7 @@ describe('content/demo.json', () => {
   const demo = videoContentSchema.parse(demoContent);
 
   it('est valide', () => {
-    expect(demo.scenes).toHaveLength(5);
+    expect(demo.scenes).toHaveLength(6);
   });
 
   it('exerce les quatre types', () => {
@@ -111,8 +112,8 @@ describe('content/demo.json', () => {
     );
   });
 
-  it('dure 420 frames', () => {
-    expect(totalDurationInFrames(demo.scenes, FPS)).toBe(420);
+  it('dure 555 frames', () => {
+    expect(totalDurationInFrames(demo.scenes, FPS)).toBe(555);
   });
 });
 
@@ -147,5 +148,96 @@ describe('conversion en frames', () => {
     expect(totalDurationInFrames(awkward, FPS)).not.toBe(
       Math.round(awkward.reduce((total, scene) => total + scene.durationInSeconds, 0) * FPS),
     );
+  });
+});
+
+const WIN_SEP = String.fromCharCode(92);
+
+describe('media', () => {
+  const hookWith = (src: string) => ({
+    type: 'hook',
+    text: 'a',
+    media: { type: 'image', src },
+    durationInSeconds: 2,
+  });
+
+  it('accepte un media image sur hook', () => {
+    expect(parseScene(hookWith('demo/photo-01.jpg'))?.type).toBe('hook');
+  });
+
+  it('accepte un media image sur statement', () => {
+    const scene = { ...statement, media: { type: 'image', src: 'demo/photo-01.jpg' } };
+    expect(parseScene(scene)?.type).toBe('statement');
+  });
+
+  it('accepte une scene hook sans media', () => {
+    expect(parseScene({ type: 'hook', text: 'a', durationInSeconds: 2 })?.type).toBe('hook');
+  });
+
+  it('accepte une scene statement sans media', () => {
+    expect(parseScene(statement)?.type).toBe('statement');
+  });
+
+  it('rejette un media sur stat', () => {
+    expect(() =>
+      parseScene({ ...stat, media: { type: 'image', src: 'demo/photo-01.jpg' } }),
+    ).toThrow();
+  });
+
+  it('rejette un media sur comparison', () => {
+    expect(() =>
+      parseScene({ ...comparison, media: { type: 'image', src: 'demo/photo-01.jpg' } }),
+    ).toThrow();
+  });
+
+  it('rejette un type de media inconnu', () => {
+    const scene = { ...statement, media: { type: 'video', src: 'demo/clip.mp4' } };
+    expect(() => parseScene(scene)).toThrow();
+  });
+
+  it.each(['demo/a.jpg', 'demo/a.jpeg', 'demo/a.png', 'demo/a.webp'])('accepte %s', (src) => {
+    expect(parseScene(hookWith(src))?.type).toBe('hook');
+  });
+
+  it.each([
+    'demo/a.gif',
+    'demo/a.svg',
+    'demo/a.avif',
+    'demo/a.txt',
+    'demo/a.JPG',
+    'demo/noextension',
+    '../secret.jpg',
+    'demo/../../secret.jpg',
+    '/etc/passwd.jpg',
+    `C:${WIN_SEP}photo.jpg`,
+    `demo${WIN_SEP}photo.jpg`,
+    'http://example.com/a.jpg',
+    'https://example.com/a.jpg',
+    '',
+  ])('rejette %s', (src) => {
+    expect(() => parseScene(hookWith(src))).toThrow();
+  });
+});
+
+describe('isPathInsideRoot', () => {
+  const root = `C:${WIN_SEP}p${WIN_SEP}assets`;
+
+  it('accepte un chemin sous la racine', () => {
+    expect(isPathInsideRoot(root, `${root}${WIN_SEP}demo${WIN_SEP}a.jpg`, WIN_SEP)).toBe(true);
+    expect(isPathInsideRoot('/p/assets', '/p/assets/demo/a.jpg', '/')).toBe(true);
+  });
+
+  it('accepte la racine elle-meme', () => {
+    expect(isPathInsideRoot('/p/assets', '/p/assets', '/')).toBe(true);
+  });
+
+  it('rejette un chemin en dehors de la racine', () => {
+    expect(isPathInsideRoot('/p/assets', '/p/secret.jpg', '/')).toBe(false);
+    expect(isPathInsideRoot(root, `C:${WIN_SEP}p${WIN_SEP}secret.jpg`, WIN_SEP)).toBe(false);
+  });
+
+  it('rejette un prefixe trompeur', () => {
+    expect(isPathInsideRoot('/p/assets', '/p/assets-prive/a.jpg', '/')).toBe(false);
+    expect(isPathInsideRoot(root, `${root}2${WIN_SEP}a.jpg`, WIN_SEP)).toBe(false);
   });
 });
