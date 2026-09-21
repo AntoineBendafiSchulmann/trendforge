@@ -8,14 +8,15 @@ export const Video = ({ scenes }: VideoContent) => {
   return (
     <AbsoluteFill className="bg-zinc-950">
       <Series>
-        {scenes.map((scene, index) => (
-          <Series.Sequence
-            key={index}
-            durationInFrames={secondsToFrames(scene.durationInSeconds, fps)}
-          >
-            <Scene scene={scene} />
-          </Series.Sequence>
-        ))}
+        {scenes.map((scene, index) => {
+          const durationInFrames = secondsToFrames(scene.durationInSeconds, fps);
+
+          return (
+            <Series.Sequence key={index} durationInFrames={durationInFrames}>
+              <Scene scene={scene} durationInFrames={durationInFrames} />
+            </Series.Sequence>
+          );
+        })}
       </Series>
     </AbsoluteFill>
   );

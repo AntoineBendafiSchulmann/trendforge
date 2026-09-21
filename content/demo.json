@@ -1,16 +1,42 @@
 {
   "scenes": [
     {
-      "text": "Trois scènes. Une seule source de données.",
+      "type": "hook",
+      "kicker": "TRENDFORGE",
+      "text": "Le moteur visuel a maintenant un langage.",
       "durationInSeconds": 2.5
     },
     {
-      "text": "Le contenu vit dans un fichier.",
-      "subtext": "Le moteur de rendu n'en sait rien.",
+      "type": "statement",
+      "text": "Le JSON décrit l'intention.",
+      "subtext": "Le moteur décide du design.",
       "durationInSeconds": 3
     },
     {
-      "text": "C'est tout pour l'instant.",
+      "type": "stat",
+      "value": "4",
+      "label": "types de scènes",
+      "caption": "hook · statement · stat · comparison",
+      "durationInSeconds": 3
+    },
+    {
+      "type": "comparison",
+      "label": "Ce qui a changé",
+      "items": [
+        {
+          "label": "Avant",
+          "value": "1 rendu"
+        },
+        {
+          "label": "Après",
+          "value": "4 rendus"
+        }
+      ],
+      "durationInSeconds": 3.5
+    },
+    {
+      "type": "statement",
+      "text": "Reste à lui donner de quoi parler.",
       "durationInSeconds": 2
     }
   ]
