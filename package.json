@@ -1,0 +1,39 @@
+{
+  "name": "trendforge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generateur local de videos courtes verticales 9:16.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=24.21.0 <25.0.0",
+    "npm": ">=11.19.0"
+  },
+  "scripts": {
+    "generate": "node src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.526",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.13.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "10.11.0",
+    "eslint-config-prettier": "10.1.8",
+    "prettier": "3.9.8",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  }
+}
