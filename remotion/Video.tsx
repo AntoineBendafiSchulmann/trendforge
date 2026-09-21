@@ -1,11 +1,22 @@
-import { AbsoluteFill, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, Series, useVideoConfig } from 'remotion';
+import { secondsToFrames, type VideoContent } from '../src/content.ts';
+import { Scene } from './Scene.tsx';
 
-export const Video = () => {
-  const frame = useCurrentFrame();
+export const Video = ({ scenes }: VideoContent) => {
+  const { fps } = useVideoConfig();
 
   return (
-    <AbsoluteFill className="items-center justify-center bg-zinc-950">
-      <span className="font-sans text-8xl text-white">{frame}</span>
+    <AbsoluteFill className="bg-zinc-950">
+      <Series>
+        {scenes.map((scene, index) => (
+          <Series.Sequence
+            key={index}
+            durationInFrames={secondsToFrames(scene.durationInSeconds, fps)}
+          >
+            <Scene scene={scene} />
+          </Series.Sequence>
+        ))}
+      </Series>
     </AbsoluteFill>
   );
 };

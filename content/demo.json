@@ -1,0 +1,17 @@
+{
+  "scenes": [
+    {
+      "text": "Trois scènes. Une seule source de données.",
+      "durationInSeconds": 2.5
+    },
+    {
+      "text": "Le contenu vit dans un fichier.",
+      "subtext": "Le moteur de rendu n'en sait rien.",
+      "durationInSeconds": 3
+    },
+    {
+      "text": "C'est tout pour l'instant.",
+      "durationInSeconds": 2
+    }
+  ]
+}
