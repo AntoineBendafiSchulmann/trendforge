@@ -8,6 +8,7 @@ import {
   useVideoConfig,
 } from 'remotion';
 import { EXIT_PADDING_FRAMES, type Media, type ResolvedScene } from '../src/content.ts';
+import { Captions } from './Captions.tsx';
 import { MediaBackground } from './MediaBackground.tsx';
 import { ComparisonScene } from './scenes/ComparisonScene.tsx';
 import { HookScene } from './scenes/HookScene.tsx';
@@ -66,6 +67,11 @@ export const Scene = ({
       >
         {renderScene(scene)}
       </div>
+      {scene.captions.length === 0 ? null : (
+        <AbsoluteFill style={{ opacity: enter * exit }}>
+          <Captions captions={scene.captions} />
+        </AbsoluteFill>
+      )}
     </AbsoluteFill>
   );
 };

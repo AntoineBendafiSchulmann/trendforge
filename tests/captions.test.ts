@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import alignmentFixture from './fixtures/alignment-fr.json' with { type: 'json' };
-import { buildCaptions, narrationWords, piperSynthesisSchema } from '../src/captions.ts';
+import {
+  activeCueIndex,
+  activeWordIndex,
+  buildCaptions,
+  narrationWords,
+  piperSynthesisSchema,
+} from '../src/captions.ts';
 import { audioDurationToFrames, EXIT_PADDING_FRAMES } from '../src/content.ts';
 
 const FPS = 30;
@@ -285,5 +291,133 @@ describe('bornes de scene', () => {
     });
     expect(result.cues).toEqual([]);
     expect(result.skipped).toBe('timeline hors des bornes de la scene');
+  });
+});
+
+describe('selection du cue actif', () => {
+  const cues = [
+    { words: [{ text: 'un', startFrame: 10, endFrame: 20 }] },
+    {
+      words: [
+        { text: 'deux', startFrame: 30, endFrame: 40 },
+        { text: 'trois', startFrame: 45, endFrame: 55 },
+      ],
+    },
+    { words: [{ text: 'quatre', startFrame: 70, endFrame: 80 }] },
+  ];
+
+  it('renvoie null sans caption', () => {
+    expect(activeCueIndex([], 0)).toBeNull();
+    expect(activeCueIndex([], 999)).toBeNull();
+  });
+
+  it('renvoie null avant le premier cue', () => {
+    expect(activeCueIndex(cues, 0)).toBeNull();
+    expect(activeCueIndex(cues, 9)).toBeNull();
+  });
+
+  it('bascule sur la frame de debut exacte', () => {
+    expect(activeCueIndex(cues, 10)).toBe(0);
+    expect(activeCueIndex(cues, 30)).toBe(1);
+    expect(activeCueIndex(cues, 70)).toBe(2);
+  });
+
+  it('conserve le cue precedent dans un intervalle', () => {
+    expect(activeCueIndex(cues, 21)).toBe(0);
+    expect(activeCueIndex(cues, 29)).toBe(0);
+    expect(activeCueIndex(cues, 60)).toBe(1);
+  });
+
+  it('conserve le dernier cue apres sa fin', () => {
+    expect(activeCueIndex(cues, 80)).toBe(2);
+    expect(activeCueIndex(cues, 5000)).toBe(2);
+  });
+});
+
+describe('selection du mot actif', () => {
+  const cue = {
+    words: [
+      { text: 'un', startFrame: 10, endFrame: 20 },
+      { text: 'deux', startFrame: 20, endFrame: 30 },
+      { text: 'trois', startFrame: 36, endFrame: 46 },
+    ],
+  };
+
+  it('designe le premier mot au debut du cue', () => {
+    expect(activeWordIndex(cue, 10)).toBe(0);
+    expect(activeWordIndex(cue, 15)).toBe(0);
+  });
+
+  it('bascule sur la frontiere exacte entre deux mots', () => {
+    expect(activeWordIndex(cue, 19)).toBe(0);
+    expect(activeWordIndex(cue, 20)).toBe(1);
+    expect(activeWordIndex(cue, 36)).toBe(2);
+  });
+
+  it('conserve le mot precedent dans un trou intra-cue', () => {
+    expect(activeWordIndex(cue, 31)).toBe(1);
+    expect(activeWordIndex(cue, 35)).toBe(1);
+  });
+
+  it('conserve le dernier mot jusqu a la fin', () => {
+    expect(activeWordIndex(cue, 46)).toBe(2);
+    expect(activeWordIndex(cue, 999)).toBe(2);
+  });
+
+  it('renvoie toujours 0 sur un cue de un seul mot', () => {
+    const unique = { words: [{ text: 'seul', startFrame: 10, endFrame: 20 }] };
+    expect(activeWordIndex(unique, 10)).toBe(0);
+    expect(activeWordIndex(unique, 15)).toBe(0);
+    expect(activeWordIndex(unique, 999)).toBe(0);
+  });
+
+  it('parcourt les cinq mots d un cue plein', () => {
+    const plein = {
+      words: [0, 1, 2, 3, 4].map((rang) => ({
+        text: `mot${rang}`,
+        startFrame: 10 + rang * 10,
+        endFrame: 18 + rang * 10,
+      })),
+    };
+    expect(activeWordIndex(plein, 10)).toBe(0);
+    expect(activeWordIndex(plein, 30)).toBe(2);
+    expect(activeWordIndex(plein, 35)).toBe(2);
+    expect(activeWordIndex(plein, 50)).toBe(4);
+    expect(activeWordIndex(plein, 999)).toBe(4);
+  });
+});
+
+describe('progression sur la fixture reelle', () => {
+  const samples = fixture.alignments.reduce((total, item) => total + item.numSamples, 0);
+  const durationInFrames = audioDurationToFrames(samples / SAMPLE_RATE, FPS);
+  const { cues } = buildCaptions({
+    narration: FIXTURE_TEXT,
+    synthesis: fixture,
+    fps: FPS,
+    durationInFrames,
+  });
+
+  it('ne fait jamais reculer le cue actif', () => {
+    let precedent = -1;
+    for (let frame = 0; frame <= durationInFrames; frame += 1) {
+      const index = activeCueIndex(cues, frame) ?? -1;
+      expect(index).toBeGreaterThanOrEqual(precedent);
+      precedent = index;
+    }
+    expect(precedent).toBe(cues.length - 1);
+  });
+
+  it('ne fait jamais reculer le mot actif dans un cue', () => {
+    for (const cue of cues) {
+      let precedent = -1;
+      const debut = cue.words[0]?.startFrame ?? 0;
+      const fin = cue.words.at(-1)?.endFrame ?? 0;
+      for (let frame = debut; frame <= fin; frame += 1) {
+        const index = activeWordIndex(cue, frame);
+        expect(index).toBeGreaterThanOrEqual(precedent);
+        precedent = index;
+      }
+      expect(precedent).toBe(cue.words.length - 1);
+    }
   });
 });

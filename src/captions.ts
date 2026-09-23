@@ -131,3 +131,26 @@ export const buildCaptions = (input: {
 
   return { cues: toCues(timed), skipped: null };
 };
+
+export const activeCueIndex = (captions: readonly CaptionCue[], frame: number): number | null => {
+  let active: number | null = null;
+
+  for (const [index, cue] of captions.entries()) {
+    const first = cue.words[0];
+    if (first === undefined || first.startFrame > frame) break;
+    active = index;
+  }
+
+  return active;
+};
+
+export const activeWordIndex = (cue: CaptionCue, frame: number): number => {
+  let active = 0;
+
+  for (const [index, word] of cue.words.entries()) {
+    if (word.startFrame > frame) break;
+    active = index;
+  }
+
+  return active;
+};
