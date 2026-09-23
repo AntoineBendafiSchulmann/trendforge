@@ -1,8 +1,12 @@
 import { spawn } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
+import { piperSynthesisSchema, type PiperSynthesis } from './captions.ts';
 
-const PIPER_PYTHON = path.resolve('.venv/Scripts/python.exe');
+const PIPER_PYTHON = path.resolve(
+  process.platform === 'win32' ? '.venv/Scripts/python.exe' : '.venv/bin/python',
+);
+const PIPER_SCRIPT = path.resolve('tools/piper_synth.py');
 const PIPER_MODEL = path.resolve('models/piper/fr_FR-siwis-medium/fr_FR-siwis-medium.onnx');
 const PIPER_CONFIG = `${PIPER_MODEL}.json`;
 const PIPER_ENV: NodeJS.ProcessEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
@@ -45,13 +49,14 @@ const requireFile = async (file: string, label: string): Promise<void> => {
 
 export const ensureTooling = async (): Promise<void> => {
   await requireFile(PIPER_PYTHON, "Python de l'environnement .venv");
+  await requireFile(PIPER_SCRIPT, 'Script de synthese Piper');
   await requireFile(PIPER_MODEL, 'Modele Piper');
   await requireFile(PIPER_CONFIG, 'Configuration du modele Piper');
 
-  const piper = await run(PIPER_PYTHON, ['-m', 'piper', '--help']);
+  const piper = await run(PIPER_PYTHON, ['-c', 'import piper, onnx']);
   if (piper.code !== 0) {
     throw new Error(
-      `piper-tts indisponible dans .venv (code ${piper.code}) : ${piper.stderr.trim()}`,
+      `piper-tts[alignment] indisponible dans .venv (code ${piper.code}) : ${piper.stderr.trim()}`,
     );
   }
 
@@ -63,16 +68,50 @@ export const ensureTooling = async (): Promise<void> => {
   }
 };
 
-export const speak = async (text: string, outputPath: string): Promise<void> => {
-  const { code, stderr } = await run(
+const EXCERPT_LIMIT = 200;
+
+const excerpt = (value: string): string => {
+  const trimmed = value.trim();
+  return trimmed.length > EXCERPT_LIMIT ? `${trimmed.slice(0, EXCERPT_LIMIT)}[...]` : trimmed;
+};
+
+const providerContext = (stdout: string, stderr: string): string => {
+  const parts = [`stdout (${stdout.length} octets) : ${JSON.stringify(excerpt(stdout))}`];
+  if (stderr.trim() !== '') parts.push(`stderr : ${JSON.stringify(excerpt(stderr))}`);
+  return parts.join(' | ');
+};
+
+export const speak = async (text: string, outputPath: string): Promise<PiperSynthesis> => {
+  const { code, stdout, stderr } = await run(
     PIPER_PYTHON,
-    ['-m', 'piper', '-m', PIPER_MODEL, '-f', outputPath],
+    [PIPER_SCRIPT, '--model', PIPER_MODEL, '--output', outputPath],
     text,
     PIPER_ENV,
   );
   if (code !== 0) {
     throw new Error(`Piper a echoue (code ${code}) : ${stderr.trim()}`);
   }
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(stdout);
+  } catch (error) {
+    throw new Error(`Piper : sortie JSON illisible. ${providerContext(stdout, stderr)}`, {
+      cause: error,
+    });
+  }
+
+  const parsed = piperSynthesisSchema.safeParse(payload);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const where =
+      issue === undefined ? 'cause inconnue' : `${issue.path.join('.')} : ${issue.message}`;
+    throw new Error(`Piper : sortie invalide (${where}). ${providerContext(stdout, stderr)}`, {
+      cause: parsed.error,
+    });
+  }
+
+  return parsed.data;
 };
 
 export const normalizeLoudness = async (input: string, output: string): Promise<void> => {

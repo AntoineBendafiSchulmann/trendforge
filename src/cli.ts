@@ -3,10 +3,12 @@ import path from 'node:path';
 import { bundle } from '@remotion/bundler';
 import { ensureBrowser, renderMedia, selectComposition } from '@remotion/renderer';
 import { enableTailwind } from '@remotion/tailwind-v4';
+import { buildCaptions } from './captions.ts';
 import { VERTICAL_9_16 } from './config.ts';
 import {
   audioDurationToFrames,
   isPathInsideRoot,
+  resolvedVideoContentSchema,
   totalResolvedFrames,
   videoContentSchema,
   type ResolvedScene,
@@ -73,11 +75,12 @@ const narrate = async (scenes: readonly Scene[]): Promise<ResolvedScene[]> => {
     const rawPath = path.join(AUDIO_DIR, `${name}.raw`);
     const finalPath = path.join(AUDIO_DIR, name);
 
-    await inScene(index, 'synthese', async () => {
-      await speak(scene.narration, rawPath);
+    const synthesis = await inScene(index, 'synthese', async () => {
+      const result = await speak(scene.narration, rawPath);
       const info = await stat(rawPath).catch(() => null);
       if (info === null || !info.isFile()) throw new Error("Piper n'a produit aucun fichier");
       if (info.size === 0) throw new Error('Piper a produit un fichier vide');
+      return result;
     });
 
     await inScene(index, 'normalisation', async () => {
@@ -88,13 +91,28 @@ const narrate = async (scenes: readonly Scene[]): Promise<ResolvedScene[]> => {
     });
 
     const seconds = await inScene(index, 'mesure', () => audioDurationInSeconds(finalPath));
+    const durationInFrames = audioDurationToFrames(seconds, VERTICAL_9_16.fps);
+
+    const captions = buildCaptions({
+      narration: scene.narration,
+      synthesis,
+      fps: VERTICAL_9_16.fps,
+      durationInFrames,
+    });
+    if (captions.skipped !== null) {
+      console.log(`  Scene ${index + 1} : sous-titres indisponibles (${captions.skipped})`);
+    }
 
     resolved.push({
       ...scene,
       audioSrc: `generated/audio/${name}`,
-      durationInFrames: audioDurationToFrames(seconds, VERTICAL_9_16.fps),
+      durationInFrames,
+      captions: captions.cues,
     });
   }
+
+  const narrated = resolved.filter((scene) => scene.captions.length > 0).length;
+  console.log(`Sous-titres... ${narrated}/${resolved.length} scenes`);
 
   return resolved;
 };
@@ -111,8 +129,8 @@ const main = async (): Promise<void> => {
 
   console.log('Narration...');
   const scenes = await narrate(content.scenes);
-  const inputProps = { scenes };
-  console.log(`Duree... ${totalResolvedFrames(scenes)} frames`);
+  const inputProps = resolvedVideoContentSchema.parse({ scenes });
+  console.log(`Duree... ${totalResolvedFrames(inputProps.scenes)} frames`);
 
   console.log('Navigateur...');
   await ensureBrowser();

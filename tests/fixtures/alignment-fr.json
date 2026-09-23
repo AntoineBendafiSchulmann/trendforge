@@ -1,0 +1,137 @@
+{
+  "sampleRate": 22050,
+  "alignments": [
+    {
+      "phoneme": "^",
+      "numSamples": 4096
+    },
+    {
+      "phoneme": "l",
+      "numSamples": 1792
+    },
+    {
+      "phoneme": "e",
+      "numSamples": 1792
+    },
+    {
+      "phoneme": "t",
+      "numSamples": 2048
+    },
+    {
+      "phoneme": "ˈ",
+      "numSamples": 1536
+    },
+    {
+      "phoneme": "e",
+      "numSamples": 512
+    },
+    {
+      "phoneme": " ",
+      "numSamples": 512
+    },
+    {
+      "phoneme": "a",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": " ",
+      "numSamples": 1536
+    },
+    {
+      "phoneme": "ʒ",
+      "numSamples": 1024
+    },
+    {
+      "phoneme": "ə",
+      "numSamples": 1024
+    },
+    {
+      "phoneme": "n",
+      "numSamples": 1792
+    },
+    {
+      "phoneme": "ˈ",
+      "numSamples": 2560
+    },
+    {
+      "phoneme": "ɛ",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": "v",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": ",",
+      "numSamples": 4352
+    },
+    {
+      "phoneme": " ",
+      "numSamples": 2048
+    },
+    {
+      "phoneme": "s",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": "ɛ",
+      "numSamples": 1792
+    },
+    {
+      "phoneme": " ",
+      "numSamples": 768
+    },
+    {
+      "phoneme": "d",
+      "numSamples": 1536
+    },
+    {
+      "phoneme": "e",
+      "numSamples": 768
+    },
+    {
+      "phoneme": "ʒ",
+      "numSamples": 1024
+    },
+    {
+      "phoneme": "ˈ",
+      "numSamples": 1536
+    },
+    {
+      "phoneme": "a",
+      "numSamples": 512
+    },
+    {
+      "phoneme": " ",
+      "numSamples": 768
+    },
+    {
+      "phoneme": "l",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": "i",
+      "numSamples": 1536
+    },
+    {
+      "phoneme": "d",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": "ˈ",
+      "numSamples": 2304
+    },
+    {
+      "phoneme": "e",
+      "numSamples": 1280
+    },
+    {
+      "phoneme": ".",
+      "numSamples": 3072
+    },
+    {
+      "phoneme": "$",
+      "numSamples": 1024
+    }
+  ]
+}

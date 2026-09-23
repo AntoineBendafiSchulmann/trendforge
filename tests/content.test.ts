@@ -29,7 +29,11 @@ const comparison = {
   ],
   narration: 'Une narration.',
 };
-const resolvedExtra = { audioSrc: 'generated/audio/scene-01.wav', durationInFrames: 38 };
+const resolvedExtra = {
+  audioSrc: 'generated/audio/scene-01.wav',
+  durationInFrames: 38,
+  captions: [],
+};
 
 describe('contrat redige', () => {
   it.each([
@@ -156,6 +160,119 @@ describe('contrat resolu', () => {
       expect(() => parseResolved({ ...statement, ...resolvedExtra, audioSrc })).toThrow();
     },
   );
+
+  it('exige le champ captions', () => {
+    const withoutCaptions: Record<string, unknown> = { ...statement, ...resolvedExtra };
+    delete withoutCaptions['captions'];
+    expect(() => parseResolved(withoutCaptions)).toThrow();
+  });
+
+  const cue = (count: number, from = 0) => ({
+    words: Array.from({ length: count }, (_, index) => ({
+      text: 'mot',
+      startFrame: from + index * 3,
+      endFrame: from + index * 3 + 3,
+    })),
+  });
+
+  it('accepte une cue de un a cinq mots', () => {
+    expect(
+      parseResolved({ ...statement, ...resolvedExtra, captions: [cue(1)] })?.captions,
+    ).toHaveLength(1);
+    expect(
+      parseResolved({ ...statement, ...resolvedExtra, captions: [cue(5)] })?.captions,
+    ).toHaveLength(1);
+    expect(() => parseResolved({ ...statement, ...resolvedExtra, captions: [cue(6)] })).toThrow();
+    expect(() => parseResolved({ ...statement, ...resolvedExtra, captions: [cue(0)] })).toThrow();
+  });
+
+  it('accepte des cues successives ordonnees', () => {
+    const captions = [cue(2), cue(2, 10)];
+    expect(parseResolved({ ...statement, ...resolvedExtra, captions })?.captions).toHaveLength(2);
+  });
+
+  const withWords = (...words: unknown[]) => ({
+    ...statement,
+    ...resolvedExtra,
+    captions: [{ words }],
+  });
+
+  it('rejette endFrame inferieur a startFrame', () => {
+    expect(() => parseResolved(withWords({ text: 'a', startFrame: 10, endFrame: 4 }))).toThrow();
+  });
+
+  it('rejette endFrame egal a startFrame', () => {
+    expect(() => parseResolved(withWords({ text: 'a', startFrame: 5, endFrame: 5 }))).toThrow();
+  });
+
+  it('rejette des mots non monotones', () => {
+    expect(() =>
+      parseResolved(
+        withWords(
+          { text: 'a', startFrame: 10, endFrame: 14 },
+          { text: 'b', startFrame: 0, endFrame: 4 },
+        ),
+      ),
+    ).toThrow();
+  });
+
+  it('rejette un recouvrement entre deux mots', () => {
+    expect(() =>
+      parseResolved(
+        withWords(
+          { text: 'a', startFrame: 0, endFrame: 10 },
+          { text: 'b', startFrame: 5, endFrame: 14 },
+        ),
+      ),
+    ).toThrow();
+  });
+
+  it('rejette un mot au-dela de la duree utile', () => {
+    const limite = 38 - EXIT_PADDING_FRAMES;
+    expect(
+      parseResolved(withWords({ text: 'a', startFrame: limite - 2, endFrame: limite }))?.captions,
+    ).toHaveLength(1);
+    expect(() =>
+      parseResolved(withWords({ text: 'a', startFrame: limite - 2, endFrame: limite + 1 })),
+    ).toThrow();
+  });
+
+  it('rejette des cues dans le desordre', () => {
+    const captions = [cue(2, 10), cue(2)];
+    expect(() => parseResolved({ ...statement, ...resolvedExtra, captions })).toThrow();
+  });
+
+  it('rejette un mot aux bornes invalides', () => {
+    const captions = (word: unknown) => [{ words: [word] }];
+    expect(() =>
+      parseResolved({
+        ...statement,
+        ...resolvedExtra,
+        captions: captions({ text: '', startFrame: 0, endFrame: 3 }),
+      }),
+    ).toThrow();
+    expect(() =>
+      parseResolved({
+        ...statement,
+        ...resolvedExtra,
+        captions: captions({ text: 'a', startFrame: -1, endFrame: 3 }),
+      }),
+    ).toThrow();
+    expect(() =>
+      parseResolved({
+        ...statement,
+        ...resolvedExtra,
+        captions: captions({ text: 'a', startFrame: 0, endFrame: 0 }),
+      }),
+    ).toThrow();
+    expect(() =>
+      parseResolved({
+        ...statement,
+        ...resolvedExtra,
+        captions: captions({ text: 'a', startFrame: 0.5, endFrame: 3 }),
+      }),
+    ).toThrow();
+  });
 });
 
 describe('timing pilote par audio', () => {

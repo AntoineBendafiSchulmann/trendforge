@@ -12,6 +12,7 @@ const FALLBACK: ResolvedVideoContent = {
       narration: 'Lancer npm run generate.',
       audioSrc: 'generated/audio/scene-01.wav',
       durationInFrames: VERTICAL_9_16.fps,
+      captions: [],
     },
   ],
 };

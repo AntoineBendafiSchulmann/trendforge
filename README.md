@@ -9,7 +9,7 @@ automatique du contenu et la détection de tendances restent à écrire.
 
 - Node.js 24.21.0 (voir `.nvmrc`)
 - FFmpeg 9.0.2, avec `ffmpeg` et `ffprobe` dans le PATH
-- Python 3.12 avec un environnement local `.venv/` contenant `piper-tts==1.8.0`
+- Python 3.12 avec un environnement local `.venv/`
 - la voix Piper `fr_FR-siwis-medium` sous `models/piper/fr_FR-siwis-medium/`
   (`.onnx` et `.onnx.json`, depuis le dépôt `rhasspy/piper-voices`)
 
@@ -17,7 +17,13 @@ automatique du contenu et la détection de tendances restent à écrire.
 
 ```bash
 npm ci
+python -m venv .venv
+.venv/Scripts/python -m pip install "piper-tts[alignment]==1.8.0"   # .venv/bin/python sous Linux
 ```
+
+L'extra `alignment` ajoute le paquet `onnx`, nécessaire pour exposer l'alignement
+phonème/échantillons du modèle. Le `.onnx` téléchargé n'est jamais modifié : le patch
+est appliqué en mémoire à chaque chargement.
 
 ## Commandes
 
@@ -39,6 +45,6 @@ Le premier `npm run generate` télécharge Chrome Headless Shell (~113 Mo) dans
 
 La narration est produite hors ligne par [Piper](https://github.com/OHF-Voice/piper1-gpl)
 (moteur sous GPL-3.0), avec la voix `fr_FR-siwis-medium`. Cette voix provient du dépôt
-`rhasspy/piper-voices`, dont la fiche indique une licence MIT au niveau du dépôt et un
+`rhasspy/piper-voices`, dont la fiche indique une licence MIT et un
 jeu de données source [SIWIS](https://datashare.is.ed.ac.uk/handle/10283/2353) sous
 CC-BY 4.0. Aucun service en ligne n'est appelé et aucune clé d'API n'est requise.
