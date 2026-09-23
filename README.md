@@ -48,3 +48,21 @@ La narration est produite hors ligne par [Piper](https://github.com/OHF-Voice/pi
 `rhasspy/piper-voices`, dont la fiche indique une licence MIT et un
 jeu de données source [SIWIS](https://datashare.is.ed.ac.uk/handle/10283/2353) sous
 CC-BY 4.0. Aucun service en ligne n'est appelé et aucune clé d'API n'est requise.
+
+## Recherche de médias (Pexels)
+
+Le client [Pexels](https://www.pexels.com/api/documentation/) sait chercher des photos
+et des vidéos portrait, mais **il n'est pas encore branché sur `npm run generate`** :
+un média `mode: "search"` est refusé explicitement tant que la sélection n'est pas
+implémentée. La génération reste donc entièrement hors ligne.
+
+La clé se lit dans `PEXELS_API_KEY` :
+
+```bash
+cp .env.example .env    # puis renseigner PEXELS_API_KEY dans .env
+```
+
+`.env` n'est jamais versionné ; `.env.example` l'est, et ne contient aucune valeur.
+Le code ne charge pas `.env` automatiquement : tant que Pexels n'est pas câblé au
+pipeline, la variable doit être fournie explicitement, par exemple avec
+`node --env-file=.env`.
