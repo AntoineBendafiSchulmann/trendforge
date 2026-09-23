@@ -35,6 +35,13 @@ const resolvedExtra = {
   captions: [],
 };
 
+const sceneCases: [string, Record<string, unknown>][] = [
+  ['hook', hook],
+  ['statement', statement],
+  ['stat', stat],
+  ['comparison', comparison],
+];
+
 describe('contrat redige', () => {
   it.each([
     ['hook', hook],
@@ -99,14 +106,8 @@ describe('media local', () => {
   const local = (src: string) => ({ mode: 'local', type: 'image', src });
   const withMedia = (src: string) => ({ ...hook, media: local(src) });
 
-  it('accepte un media sur hook et statement', () => {
-    expect(parseScene(withMedia('demo/a.jpg'))?.type).toBe('hook');
-    expect(parseScene({ ...statement, media: local('demo/a.jpg') })?.type).toBe('statement');
-  });
-
-  it('rejette un media sur stat et comparison', () => {
-    expect(() => parseScene({ ...stat, media: local('demo/a.jpg') })).toThrow();
-    expect(() => parseScene({ ...comparison, media: local('demo/a.jpg') })).toThrow();
+  it.each(sceneCases)('accepte un media local image sur %s', (type, scene) => {
+    expect(parseScene({ ...scene, media: local('demo/a.jpg') })?.type).toBe(type);
   });
 
   it.each(['demo/a.jpg', 'demo/a.jpeg', 'demo/a.png', 'demo/a.webp'])('accepte %s', (src) => {
@@ -143,6 +144,112 @@ describe('media local', () => {
     expect(() =>
       parseScene({ ...hook, media: { ...local('demo/a.jpg'), query: 'paris' } }),
     ).toThrow();
+  });
+});
+
+describe('media local video', () => {
+  const video = (src: string) => ({ mode: 'local', type: 'video', src });
+  const withVideo = (src: string) => ({ ...hook, media: video(src) });
+
+  it('accepte un media video sur hook et statement', () => {
+    expect(parseScene(withVideo('generated/media/a.mp4'))?.type).toBe('hook');
+    expect(parseScene({ ...statement, media: video('demo/a.mp4') })?.type).toBe('statement');
+  });
+
+  it('accepte un media video sur stat et comparison', () => {
+    expect(parseScene({ ...stat, media: video('demo/a.mp4') })?.type).toBe('stat');
+    expect(parseScene({ ...comparison, media: video('demo/a.mp4') })?.type).toBe('comparison');
+  });
+
+  it.each(['demo/a.jpg', 'demo/a.jpeg', 'demo/a.png', 'demo/a.webp', 'demo/a.webm', 'demo/a.mov'])(
+    'rejette type video avec %s',
+    (src) => {
+      expect(() => parseScene(withVideo(src))).toThrow();
+    },
+  );
+
+  it.each(['demo/a.mp4', 'generated/media/pexels-video-1-2.mp4'])(
+    'rejette type image avec %s',
+    (src) => {
+      expect(() => parseScene({ ...hook, media: { mode: 'local', type: 'image', src } })).toThrow();
+    },
+  );
+
+  it.each([
+    'demo/a.MP4',
+    'demo/noextension',
+    '../secret.mp4',
+    '/etc/passwd.mp4',
+    `C:${WIN_SEP}clip.mp4`,
+    `demo${WIN_SEP}clip.mp4`,
+    'http://example.com/a.mp4',
+    '',
+  ])('rejette %s', (src) => {
+    expect(() => parseScene(withVideo(src))).toThrow();
+  });
+
+  it('rejette un type de media inconnu', () => {
+    expect(() =>
+      parseScene({ ...hook, media: { mode: 'local', type: 'audio', src: 'demo/a.mp4' } }),
+    ).toThrow();
+  });
+
+  it('rejette une query dans un media video local', () => {
+    expect(() =>
+      parseScene({ ...hook, media: { ...video('demo/a.mp4'), query: 'paris' } }),
+    ).toThrow();
+  });
+});
+
+describe('media sur tous les types de scenes', () => {
+  const search = (kind: string) => ({ mode: 'search', kind, query: 'paris' });
+
+  it.each(sceneCases)('accepte un SearchMedia image sur %s', (type, scene) => {
+    expect(parseScene({ ...scene, media: search('image') })?.type).toBe(type);
+  });
+
+  it.each(sceneCases)('accepte un SearchMedia video sur %s', (type, scene) => {
+    expect(parseScene({ ...scene, media: search('video') })?.type).toBe(type);
+  });
+
+  it.each(sceneCases)('accepte un media local video sur %s', (type, scene) => {
+    expect(
+      parseScene({ ...scene, media: { mode: 'local', type: 'video', src: 'demo/a.mp4' } })?.type,
+    ).toBe(type);
+  });
+
+  it.each(sceneCases)('garde le media optionnel sur %s', (type, scene) => {
+    const parsed = parseScene(scene);
+    expect(parsed?.type).toBe(type);
+    expect(parsed?.media).toBeUndefined();
+  });
+
+  it.each(sceneCases)('rejette un media invalide sur %s', (_type, scene) => {
+    expect(() =>
+      parseScene({ ...scene, media: { mode: 'local', type: 'image', src: 'demo/a.gif' } }),
+    ).toThrow();
+    expect(() => parseScene({ ...scene, media: search('audio') })).toThrow();
+    expect(() => parseScene({ ...scene, media: { mode: 'local', type: 'image' } })).toThrow();
+    expect(() =>
+      parseScene({ ...scene, media: { mode: 'local', type: 'video', src: 'a.jpg' } }),
+    ).toThrow();
+  });
+
+  it.each(sceneCases)('resout la coherence type extension sur %s', (type, scene) => {
+    const resolved = { ...scene, ...resolvedExtra };
+    expect(
+      parseResolved({
+        ...resolved,
+        media: { mode: 'local', type: 'video', src: 'generated/media/a.mp4' },
+      })?.type,
+    ).toBe(type);
+    expect(() =>
+      parseResolved({
+        ...resolved,
+        media: { mode: 'local', type: 'image', src: 'generated/media/a.mp4' },
+      }),
+    ).toThrow();
+    expect(() => parseResolved({ ...resolved, media: search('image') })).toThrow();
   });
 });
 

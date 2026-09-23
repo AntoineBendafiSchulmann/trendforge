@@ -12,10 +12,10 @@ import {
   totalResolvedFrames,
   videoContentSchema,
   type LocalMedia,
-  type Media,
   type ResolvedScene,
   type Scene,
 } from './content.ts';
+import { resolveSceneMedia } from './media-resolve.ts';
 import { audioDurationInSeconds, ensureTooling, normalizeLoudness, speak } from './tts.ts';
 
 const COMPOSITION_ID = 'TrendForgeVideo';
@@ -23,20 +23,9 @@ const ENTRY_POINT = path.resolve('remotion/index.ts');
 const CONTENT_FILE = path.resolve('content/demo.json');
 const ASSETS_DIR = path.resolve('assets');
 const AUDIO_DIR = path.resolve('assets/generated/audio');
+const MEDIA_DIR = path.resolve('assets/generated/media');
+const LOCK_FILE = path.resolve('content/media-lock.json');
 const OUTPUT_LOCATION = path.resolve('output/video-001.mp4');
-
-const mediaOf = (scene: Scene): Media | undefined =>
-  scene.type === 'hook' || scene.type === 'statement' ? scene.media : undefined;
-
-const resolveMedia = (index: number, media: Media | undefined): LocalMedia | undefined => {
-  if (media === undefined) return undefined;
-  if (media.mode === 'search') {
-    throw new Error(
-      `Scene ${index + 1} : media search non supporte dans M7.0 (query "${media.query}")`,
-    );
-  }
-  return media;
-};
 
 const inScene = async <T>(index: number, step: string, task: () => Promise<T>): Promise<T> => {
   try {
@@ -47,11 +36,10 @@ const inScene = async <T>(index: number, step: string, task: () => Promise<T>): 
   }
 };
 
-const checkMedia = async (scenes: readonly Scene[]): Promise<number> => {
+const checkMedia = async (medias: readonly (LocalMedia | undefined)[]): Promise<number> => {
   let checked = 0;
 
-  for (const [index, scene] of scenes.entries()) {
-    const media = resolveMedia(index, mediaOf(scene));
+  for (const [index, media] of medias.entries()) {
     if (media === undefined) continue;
 
     const src = media.src;
@@ -78,7 +66,10 @@ const checkMedia = async (scenes: readonly Scene[]): Promise<number> => {
   return checked;
 };
 
-const narrate = async (scenes: readonly Scene[]): Promise<ResolvedScene[]> => {
+const narrate = async (
+  scenes: readonly Scene[],
+  medias: readonly (LocalMedia | undefined)[],
+): Promise<ResolvedScene[]> => {
   await rm(AUDIO_DIR, { recursive: true, force: true });
   await mkdir(AUDIO_DIR, { recursive: true });
 
@@ -123,11 +114,7 @@ const narrate = async (scenes: readonly Scene[]): Promise<ResolvedScene[]> => {
       captions: captions.cues,
     };
 
-    resolved.push(
-      scene.type === 'hook' || scene.type === 'statement'
-        ? { ...scene, ...resolvedFields, media: resolveMedia(index, scene.media) }
-        : { ...scene, ...resolvedFields },
-    );
+    resolved.push({ ...scene, ...resolvedFields, media: medias[index] });
   }
 
   const narrated = resolved.filter((scene) => scene.captions.length > 0).length;
@@ -141,13 +128,24 @@ const main = async (): Promise<void> => {
   const content = videoContentSchema.parse(raw);
   console.log(`Contenu... ${content.scenes.length} scenes`);
 
-  console.log(`Medias... ${await checkMedia(content.scenes)} verifies`);
-
   console.log('Outils...');
   await ensureTooling();
 
+  const { resolved: medias, report } = await resolveSceneMedia(
+    content.scenes.map((scene) => scene.media),
+    {
+      assetsDir: ASSETS_DIR,
+      mediaDir: MEDIA_DIR,
+      lockFile: LOCK_FILE,
+    },
+  );
+  const verifies = await checkMedia(medias);
+  console.log(
+    `Medias... ${verifies} verifies (${report.local} locaux, ${report.reused} verrouilles, ${report.fetched} telecharges)`,
+  );
+
   console.log('Narration...');
-  const scenes = await narrate(content.scenes);
+  const scenes = await narrate(content.scenes, medias);
   const inputProps = resolvedVideoContentSchema.parse({ scenes });
   console.log(`Duree... ${totalResolvedFrames(inputProps.scenes)} frames`);
 

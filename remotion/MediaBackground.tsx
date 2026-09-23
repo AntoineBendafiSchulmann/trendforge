@@ -1,3 +1,4 @@
+import { Video } from '@remotion/media';
 import {
   AbsoluteFill,
   Img,
@@ -11,13 +12,7 @@ import type { LocalMedia } from '../src/content.ts';
 
 const ZOOM_PER_SECOND = 0.02;
 
-export const MediaBackground = ({
-  media,
-  durationInFrames,
-}: {
-  media: LocalMedia;
-  durationInFrames: number;
-}) => {
+const ImageLayer = ({ src, durationInFrames }: { src: string; durationInFrames: number }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -31,14 +26,28 @@ export const MediaBackground = ({
   });
 
   return (
-    <AbsoluteFill>
-      <Img
-        src={staticFile(media.src)}
-        className="h-full w-full object-cover object-center"
-        style={{ transform: `scale(${scale})` }}
-      />
-      <AbsoluteFill className="bg-black/45" />
-      <AbsoluteFill className="bg-linear-to-b from-transparent via-black/35 to-transparent" />
-    </AbsoluteFill>
+    <Img
+      src={staticFile(src)}
+      className="h-full w-full object-cover object-center"
+      style={{ transform: `scale(${scale})` }}
+    />
   );
 };
+
+export const MediaBackground = ({
+  media,
+  durationInFrames,
+}: {
+  media: LocalMedia;
+  durationInFrames: number;
+}) => (
+  <AbsoluteFill>
+    {media.type === 'image' ? (
+      <ImageLayer src={media.src} durationInFrames={durationInFrames} />
+    ) : (
+      <Video src={staticFile(media.src)} objectFit="cover" loop muted className="h-full w-full" />
+    )}
+    <AbsoluteFill className="bg-black/45" />
+    <AbsoluteFill className="bg-linear-to-b from-transparent via-black/35 to-transparent" />
+  </AbsoluteFill>
+);

@@ -49,12 +49,31 @@ La narration est produite hors ligne par [Piper](https://github.com/OHF-Voice/pi
 jeu de données source [SIWIS](https://datashare.is.ed.ac.uk/handle/10283/2353) sous
 CC-BY 4.0. Aucun service en ligne n'est appelé et aucune clé d'API n'est requise.
 
-## Recherche de médias (Pexels)
+## Médias de fond (Pexels)
 
-Le client [Pexels](https://www.pexels.com/api/documentation/) sait chercher des photos
-et des vidéos portrait, mais **il n'est pas encore branché sur `npm run generate`** :
-un média `mode: "search"` est refusé explicitement tant que la sélection n'est pas
-implémentée. La génération reste donc entièrement hors ligne.
+Un fond de scène se déclare de deux façons dans `content/demo.json` :
+
+```json
+{ "mode": "local",  "type": "image", "src": "demo/deep-portrait.jpg" }
+{ "mode": "search", "kind": "video", "query": "city skyline night" }
+```
+
+Un média `local` est lu tel quel sous `assets/`. Un média `search` est résolu au
+premier `npm run generate` : recherche [Pexels](https://www.pexels.com/api/documentation/)
+en orientation portrait, sélection déterministe du meilleur candidat, téléchargement
+dans `assets/generated/media/`, puis écriture d'une entrée dans `content/media-lock.json`.
+
+Une image de fond reçoit un léger zoom ; une vidéo de fond est jouée muette et bouclée
+si la scène dure plus longtemps que le clip.
+
+Le lock est versionné et fait foi. Aux exécutions suivantes, une requête déjà
+verrouillée est relue depuis le disque : aucun appel réseau, donc aucune clé requise et
+aucun quota consommé. Si le fichier verrouillé a disparu ou si son empreinte SHA-256 ne
+correspond plus, la génération s'arrête sur une erreur explicite — jamais de nouvelle
+recherche silencieuse. Pour relancer une recherche, retirer l'entrée du lock.
+
+Les fichiers téléchargés ne sont pas versionnés (`assets/generated/`) : un clone neuf
+doit donc récupérer les médias ou vider `content/media-lock.json`.
 
 La clé se lit dans `PEXELS_API_KEY` :
 
@@ -63,6 +82,5 @@ cp .env.example .env    # puis renseigner PEXELS_API_KEY dans .env
 ```
 
 `.env` n'est jamais versionné ; `.env.example` l'est, et ne contient aucune valeur.
-Le code ne charge pas `.env` automatiquement : tant que Pexels n'est pas câblé au
-pipeline, la variable doit être fournie explicitement, par exemple avec
-`node --env-file=.env`.
+`npm run generate` le charge s'il existe (`node --env-file-if-exists=.env`). La clé
+n'est nécessaire que pour résoudre une requête absente du lock.

@@ -2,16 +2,25 @@ import { z } from 'zod';
 
 export const EXIT_PADDING_FRAMES = 8;
 
-const MEDIA_SRC_PATTERN = /^[a-z0-9][a-z0-9/_-]*\.(?:jpe?g|png|webp)$/;
+const IMAGE_SRC_PATTERN = /^[a-z0-9][a-z0-9/_-]*\.(?:jpe?g|png|webp)$/;
+const VIDEO_SRC_PATTERN = /^[a-z0-9][a-z0-9/_-]*\.mp4$/;
 const AUDIO_SRC_PATTERN = /^[a-z0-9][a-z0-9/_-]*\.wav$/;
 const QUERY_PATTERN = /^[\p{L}\p{N} ,'’-]+$/u;
 const QUERY_HAS_WORD = /[\p{L}\p{N}]/u;
 
-const localMediaSchema = z.strictObject({
+const localImageSchema = z.strictObject({
   mode: z.literal('local'),
   type: z.literal('image'),
-  src: z.string().min(1).max(200).regex(MEDIA_SRC_PATTERN),
+  src: z.string().min(1).max(200).regex(IMAGE_SRC_PATTERN),
 });
+
+const localVideoSchema = z.strictObject({
+  mode: z.literal('local'),
+  type: z.literal('video'),
+  src: z.string().min(1).max(200).regex(VIDEO_SRC_PATTERN),
+});
+
+const localMediaSchema = z.discriminatedUnion('type', [localImageSchema, localVideoSchema]);
 
 const searchMediaSchema = z.strictObject({
   mode: z.literal('search'),
@@ -21,6 +30,8 @@ const searchMediaSchema = z.strictObject({
 
 const mediaSchema = z.discriminatedUnion('mode', [localMediaSchema, searchMediaSchema]);
 
+const mediaField = { media: mediaSchema.optional() };
+
 const narrationSchema = z.string().min(1).max(300).regex(/\S/);
 
 const hookSceneSchema = z.strictObject({
@@ -28,7 +39,7 @@ const hookSceneSchema = z.strictObject({
   kicker: z.string().min(1).max(24).optional(),
   text: z.string().min(1).max(70),
   narration: narrationSchema,
-  media: mediaSchema.optional(),
+  ...mediaField,
 });
 
 const statementSceneSchema = z.strictObject({
@@ -36,7 +47,7 @@ const statementSceneSchema = z.strictObject({
   text: z.string().min(1).max(90),
   subtext: z.string().min(1).max(140).optional(),
   narration: narrationSchema,
-  media: mediaSchema.optional(),
+  ...mediaField,
 });
 
 const statSceneSchema = z.strictObject({
@@ -45,6 +56,7 @@ const statSceneSchema = z.strictObject({
   label: z.string().min(1).max(40),
   caption: z.string().min(1).max(90).optional(),
   narration: narrationSchema,
+  ...mediaField,
 });
 
 const comparisonItemSchema = z.strictObject({
@@ -57,6 +69,7 @@ const comparisonSceneSchema = z.strictObject({
   label: z.string().min(1).max(40),
   items: z.tuple([comparisonItemSchema, comparisonItemSchema]),
   narration: narrationSchema,
+  ...mediaField,
 });
 
 const sceneSchema = z.discriminatedUnion('type', [
@@ -111,8 +124,8 @@ const resolvedSceneSchema = z
   .discriminatedUnion('type', [
     hookSceneSchema.extend(resolvedFields).extend(resolvedMediaField),
     statementSceneSchema.extend(resolvedFields).extend(resolvedMediaField),
-    statSceneSchema.extend(resolvedFields),
-    comparisonSceneSchema.extend(resolvedFields),
+    statSceneSchema.extend(resolvedFields).extend(resolvedMediaField),
+    comparisonSceneSchema.extend(resolvedFields).extend(resolvedMediaField),
   ])
   .refine(captionsAreOrdered, {
     message: 'sous-titres non ordonnes, en recouvrement ou hors des bornes de la scene',

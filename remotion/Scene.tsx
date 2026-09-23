@@ -7,7 +7,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { EXIT_PADDING_FRAMES, type LocalMedia, type ResolvedScene } from '../src/content.ts';
+import { EXIT_PADDING_FRAMES, type ResolvedScene } from '../src/content.ts';
 import { Captions } from './Captions.tsx';
 import { MediaBackground } from './MediaBackground.tsx';
 import { ComparisonScene } from './scenes/ComparisonScene.tsx';
@@ -16,9 +16,6 @@ import { StatementScene } from './scenes/StatementScene.tsx';
 import { StatScene } from './scenes/StatScene.tsx';
 
 const ENTER_FRAMES = 8;
-
-const mediaOf = (scene: ResolvedScene): LocalMedia | undefined =>
-  scene.type === 'hook' || scene.type === 'statement' ? scene.media : undefined;
 
 const renderScene = (scene: ResolvedScene) => {
   switch (scene.type) {
@@ -42,7 +39,7 @@ export const Scene = ({
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const media = mediaOf(scene);
+  const { media } = scene;
 
   const lift = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 15 });
   const enter = interpolate(frame, [0, ENTER_FRAMES], [0, 1], { extrapolateRight: 'clamp' });

@@ -10,7 +10,7 @@
     "npm": ">=11.19.0"
   },
   "scripts": {
-    "generate": "node src/cli.ts",
+    "generate": "node --env-file-if-exists=.env src/cli.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

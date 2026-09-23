@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "entries": {
+    "image:green building facade": {
+      "provider": "pexels",
+      "query": "green building facade",
+      "providerAssetId": "18266168",
+      "sourcePage": "https://www.pexels.com/photo/ivy-decorating-facade-of-house-18266168/",
+      "credit": {
+        "name": "aysenurhamra",
+        "url": "https://www.pexels.com/@aysenurhamra-68268085"
+      },
+      "src": "generated/media/pexels-image-18266168.jpg",
+      "sha256": "23202fb10c23c5f85c9a9388ee6831addc27275a8cd5e5f5453e989c5c48046a",
+      "width": 3248,
+      "height": 5774,
+      "kind": "image",
+      "format": "jpeg"
+    },
+    "image:modern tower architecture": {
+      "provider": "pexels",
+      "query": "modern tower architecture",
+      "providerAssetId": "35062534",
+      "sourcePage": "https://www.pexels.com/photo/modern-high-rise-building-against-overcast-sky-35062534/",
+      "credit": {
+        "name": "Nour Alhoda",
+        "url": "https://www.pexels.com/@nour-alhoda-2151678059"
+      },
+      "src": "generated/media/pexels-image-35062534.jpg",
+      "sha256": "3deb2007215b5d3da72e607adfcd0e8b458367327c6512ea8c9ea6333cd2f187",
+      "width": 2252,
+      "height": 4000,
+      "kind": "image",
+      "format": "jpeg"
+    },
+    "image:skyscraper low angle": {
+      "provider": "pexels",
+      "query": "skyscraper low angle",
+      "providerAssetId": "17646575",
+      "sourcePage": "https://www.pexels.com/photo/low-angle-shot-of-modern-skyscrapers-in-city-17646575/",
+      "credit": {
+        "name": "Masood Aslami",
+        "url": "https://www.pexels.com/@masoodaslami"
+      },
+      "src": "generated/media/pexels-image-17646575.jpg",
+      "sha256": "7d11b3251e54a6a9e982329881937e7e81949bf22286b32d91bd4859252a2953",
+      "width": 3333,
+      "height": 5000,
+      "kind": "image",
+      "format": "jpeg"
+    },
+    "image:stacked balconies building": {
+      "provider": "pexels",
+      "query": "stacked balconies building",
+      "providerAssetId": "11212544",
+      "sourcePage": "https://www.pexels.com/photo/building-with-laundry-outside-11212544/",
+      "credit": {
+        "name": "Max Mishin",
+        "url": "https://www.pexels.com/@maxmishin"
+      },
+      "src": "generated/media/pexels-image-11212544.jpg",
+      "sha256": "47e498fee0d762e7898b1e5e52d6b9eb30ce2c9e78ec98e1b19d57bbfd32fcd9",
+      "width": 3114,
+      "height": 5535,
+      "kind": "image",
+      "format": "jpeg"
+    },
+    "video:city skyline night": {
+      "provider": "pexels",
+      "query": "city skyline night",
+      "providerAssetId": "11335976",
+      "sourcePage": "https://www.pexels.com/video/skyscraper-at-night-11335976/",
+      "credit": {
+        "name": "Glenn Langhorst",
+        "url": "https://www.pexels.com/@glenn-langhorst-120487"
+      },
+      "src": "generated/media/pexels-video-11335976-4937456.mp4",
+      "sha256": "2995e8fd6700d56dbf8b4ae26fe28ae64b18dba5122754e8752af5deae245ee7",
+      "width": 1080,
+      "height": 1920,
+      "kind": "video",
+      "providerVariantId": "4937456",
+      "durationInSeconds": 11.933008
+    }
+  }
+}

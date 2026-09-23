@@ -5,27 +5,29 @@
       "kicker": "ET SI...",
       "text": "Une ville entière tenait dans une seule tour ?",
       "narration": "Imaginez : au lieu de s'étaler sur des kilomètres, une ville entière se replie à la verticale, dans un seul bâtiment.",
-      "media": { "mode": "local", "type": "image", "src": "demo/light-landscape.jpg" }
+      "media": { "mode": "search", "kind": "video", "query": "city skyline night" }
     },
     {
       "type": "statement",
       "text": "Chaque étage aurait son propre quartier.",
       "subtext": "Logements, commerces, jardins et lieux de travail.",
-      "narration": "En bas, les commerces. Plus haut, les logements. Et entre les deux, des jardins suspendus où l'on vient respirer."
+      "narration": "En bas, les commerces. Plus haut, les logements. Et entre les deux, des jardins suspendus où l'on vient respirer.",
+      "media": { "mode": "search", "kind": "image", "query": "green building facade" }
     },
     {
       "type": "statement",
       "text": "Plus besoin de traverser la ville.",
       "subtext": "Tout serait accessible en quelques minutes.",
       "narration": "Votre trajet du matin ne dépasserait jamais quelques étages. L'ascenseur remplacerait le métro.",
-      "media": { "mode": "local", "type": "image", "src": "demo/mid-square.jpg" }
+      "media": { "mode": "search", "kind": "image", "query": "modern tower architecture" }
     },
     {
       "type": "stat",
       "value": "1",
       "label": "ville verticale",
       "caption": "des dizaines de quartiers superposés",
-      "narration": "Un seul édifice, mais des dizaines de quartiers empilés, chacun avec sa propre ambiance."
+      "narration": "Un seul édifice, mais des dizaines de quartiers empilés, chacun avec sa propre ambiance.",
+      "media": { "mode": "search", "kind": "image", "query": "stacked balconies building" }
     },
     {
       "type": "comparison",
@@ -34,7 +36,8 @@
         { "label": "Horizontale", "value": "s'étendre" },
         { "label": "Verticale", "value": "s'élever" }
       ],
-      "narration": "La ville horizontale grignote les champs autour d'elle. La ville verticale, elle, ne prend que l'espace du ciel."
+      "narration": "La ville horizontale grignote les champs autour d'elle. La ville verticale, elle, ne prend que l'espace du ciel.",
+      "media": { "mode": "search", "kind": "image", "query": "skyscraper low angle" }
     },
     {
       "type": "statement",
