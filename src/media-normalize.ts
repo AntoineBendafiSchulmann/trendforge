@@ -1,8 +1,8 @@
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { rename, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { runProcess } from './process.ts';
 import {
   describeImage,
   describeVideo,
@@ -60,21 +60,6 @@ export const canonicalSrc = (absolute: string, assetsDir: string): string => {
   return relative.split(path.sep).join('/');
 };
 
-const runFfmpeg = (args: readonly string[]): Promise<{ code: number | null; stderr: string }> =>
-  new Promise((resolve, reject) => {
-    const child = spawn('ffmpeg', [...args], { windowsHide: true });
-    let stderr = '';
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString('utf8');
-    });
-    child.on('error', (error: Error) => {
-      reject(new Error(`ffmpeg introuvable ou non executable : ${error.message}`));
-    });
-    child.on('close', (code) => {
-      resolve({ code, stderr });
-    });
-  });
-
 const normalizeImage = async (
   asset: DownloadedImage,
   baseName: string,
@@ -109,7 +94,7 @@ const normalizeVideo = async (
   const canonical = path.join(directory, `${baseName}.mp4`);
 
   try {
-    const { code, stderr } = await runFfmpeg([
+    const { code, stderr } = await runProcess('ffmpeg', [
       '-v',
       'error',
       '-y',

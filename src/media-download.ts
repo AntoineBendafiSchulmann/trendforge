@@ -1,10 +1,10 @@
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { createWriteStream } from 'node:fs';
 import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
+import { runProcess } from './process.ts';
 import { MAX_VARIANT_BYTES } from './media-selection.ts';
 
 const ALLOWED_HOSTS = new Set(['images.pexels.com', 'videos.pexels.com']);
@@ -171,27 +171,7 @@ export const parseProbe = (stdout: string): Probe => {
 export const probeFile = async (file: string): Promise<Probe> => {
   const args = ['-v', 'error', '-print_format', 'json', '-show_format', '-show_streams', file];
 
-  const { code, stdout, stderr } = await new Promise<{
-    code: number | null;
-    stdout: string;
-    stderr: string;
-  }>((resolve, reject) => {
-    const child = spawn('ffprobe', args, { windowsHide: true });
-    let out = '';
-    let err = '';
-    child.stdout.on('data', (chunk: Buffer) => {
-      out += chunk.toString('utf8');
-    });
-    child.stderr.on('data', (chunk: Buffer) => {
-      err += chunk.toString('utf8');
-    });
-    child.on('error', (error: Error) => {
-      reject(new Error(`ffprobe introuvable ou non executable : ${error.message}`));
-    });
-    child.on('close', (status) => {
-      resolve({ code: status, stdout: out, stderr: err });
-    });
-  });
+  const { code, stdout, stderr } = await runProcess('ffprobe', args);
 
   if (code !== 0) {
     throw new Error(`ffprobe a echoue (code ${code}) : ${stderr.trim()}`);

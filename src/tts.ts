@@ -1,6 +1,6 @@
-import { spawn } from 'node:child_process';
 import { stat } from 'node:fs/promises';
 import path from 'node:path';
+import { runProcess } from './process.ts';
 import { piperSynthesisSchema, type PiperSynthesis } from './captions.ts';
 
 const PIPER_PYTHON = path.resolve(
@@ -10,35 +10,6 @@ const PIPER_SCRIPT = path.resolve('tools/piper_synth.py');
 const PIPER_MODEL = path.resolve('models/piper/fr_FR-siwis-medium/fr_FR-siwis-medium.onnx');
 const PIPER_CONFIG = `${PIPER_MODEL}.json`;
 const PIPER_ENV: NodeJS.ProcessEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
-
-type RunResult = { code: number | null; stdout: string; stderr: string };
-
-const run = (
-  command: string,
-  args: readonly string[],
-  input?: string,
-  env?: NodeJS.ProcessEnv,
-): Promise<RunResult> =>
-  new Promise((resolve, reject) => {
-    const child = spawn(command, [...args], { windowsHide: true, env: env ?? process.env });
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', (chunk: Buffer) => {
-      stdout += chunk.toString('utf8');
-    });
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString('utf8');
-    });
-    child.on('error', (error: Error) => {
-      reject(new Error(`${command} introuvable ou non executable : ${error.message}`));
-    });
-    child.on('close', (code) => {
-      resolve({ code, stdout, stderr });
-    });
-
-    child.stdin.end(input ?? '', 'utf8');
-  });
 
 const requireFile = async (file: string, label: string): Promise<void> => {
   const info = await stat(file).catch(() => null);
@@ -53,7 +24,7 @@ export const ensureTooling = async (): Promise<void> => {
   await requireFile(PIPER_MODEL, 'Modele Piper');
   await requireFile(PIPER_CONFIG, 'Configuration du modele Piper');
 
-  const piper = await run(PIPER_PYTHON, ['-c', 'import piper, onnx']);
+  const piper = await runProcess(PIPER_PYTHON, ['-c', 'import piper, onnx']);
   if (piper.code !== 0) {
     throw new Error(
       `piper-tts[alignment] indisponible dans .venv (code ${piper.code}) : ${piper.stderr.trim()}`,
@@ -61,7 +32,7 @@ export const ensureTooling = async (): Promise<void> => {
   }
 
   for (const tool of ['ffmpeg', 'ffprobe']) {
-    const { code } = await run(tool, ['-version']);
+    const { code } = await runProcess(tool, ['-version']);
     if (code !== 0) {
       throw new Error(`${tool} indisponible (code ${code}). FFmpeg doit etre dans le PATH.`);
     }
@@ -82,11 +53,10 @@ const providerContext = (stdout: string, stderr: string): string => {
 };
 
 export const speak = async (text: string, outputPath: string): Promise<PiperSynthesis> => {
-  const { code, stdout, stderr } = await run(
+  const { code, stdout, stderr } = await runProcess(
     PIPER_PYTHON,
     [PIPER_SCRIPT, '--model', PIPER_MODEL, '--output', outputPath],
-    text,
-    PIPER_ENV,
+    { input: text, env: PIPER_ENV },
   );
   if (code !== 0) {
     throw new Error(`Piper a echoue (code ${code}) : ${stderr.trim()}`);
@@ -115,7 +85,7 @@ export const speak = async (text: string, outputPath: string): Promise<PiperSynt
 };
 
 export const normalizeLoudness = async (input: string, output: string): Promise<void> => {
-  const { code, stderr } = await run('ffmpeg', [
+  const { code, stderr } = await runProcess('ffmpeg', [
     '-v',
     'error',
     '-y',
@@ -137,7 +107,7 @@ export const normalizeLoudness = async (input: string, output: string): Promise<
 };
 
 export const audioDurationInSeconds = async (file: string): Promise<number> => {
-  const { code, stdout, stderr } = await run('ffprobe', [
+  const { code, stdout, stderr } = await runProcess('ffprobe', [
     '-v',
     'error',
     '-show_entries',
