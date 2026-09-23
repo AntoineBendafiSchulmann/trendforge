@@ -6,10 +6,10 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
+import { MEDIA_BACKGROUND_MAX_ZOOM } from '../src/config.ts';
 import type { LocalMedia } from '../src/content.ts';
 
 const ZOOM_PER_SECOND = 0.02;
-const ZOOM_MAX = 1.25;
 
 export const MediaBackground = ({
   media,
@@ -21,7 +21,10 @@ export const MediaBackground = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const target = Math.min(1 + ZOOM_PER_SECOND * (durationInFrames / fps), ZOOM_MAX);
+  const target = Math.min(
+    1 + ZOOM_PER_SECOND * (durationInFrames / fps),
+    MEDIA_BACKGROUND_MAX_ZOOM,
+  );
   const scale = interpolate(frame, [0, durationInFrames], [1, target], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',

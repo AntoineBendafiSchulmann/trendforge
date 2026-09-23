@@ -13,3 +13,5 @@ export const VERTICAL_9_16: VideoFormat = videoFormatSchema.parse({
   height: 1920,
   fps: 30,
 });
+
+export const MEDIA_BACKGROUND_MAX_ZOOM = 1.25;
