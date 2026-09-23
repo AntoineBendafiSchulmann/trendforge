@@ -1,19 +1,28 @@
 import './index.css';
 import { Composition } from 'remotion';
-import demoContent from '../content/demo.json' with { type: 'json' };
 import { VERTICAL_9_16 } from '../src/config.ts';
-import { totalDurationInFrames, videoContentSchema } from '../src/content.ts';
+import { totalResolvedFrames, type ResolvedVideoContent } from '../src/content.ts';
 import { Video } from './Video.tsx';
 
-const demo = videoContentSchema.parse(demoContent);
+const FALLBACK: ResolvedVideoContent = {
+  scenes: [
+    {
+      type: 'statement',
+      text: 'Lancer npm run generate',
+      narration: 'Lancer npm run generate.',
+      audioSrc: 'generated/audio/scene-01.wav',
+      durationInFrames: VERTICAL_9_16.fps,
+    },
+  ],
+};
 
 export const RemotionRoot = () => (
   <Composition
     id="TrendForgeVideo"
     component={Video}
-    defaultProps={demo}
+    defaultProps={FALLBACK}
     calculateMetadata={({ props }) => ({
-      durationInFrames: totalDurationInFrames(props.scenes, VERTICAL_9_16.fps),
+      durationInFrames: totalResolvedFrames(props.scenes),
     })}
     fps={VERTICAL_9_16.fps}
     width={VERTICAL_9_16.width}

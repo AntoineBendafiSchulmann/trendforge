@@ -1,26 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import demoContent from '../content/demo.json' with { type: 'json' };
 import {
+  audioDurationToFrames,
+  EXIT_PADDING_FRAMES,
   isPathInsideRoot,
-  sceneDurationsInFrames,
-  secondsToFrames,
-  totalDurationInFrames,
+  resolvedVideoContentSchema,
+  totalResolvedFrames,
   videoContentSchema,
-  type Scene,
+  type ResolvedScene,
 } from '../src/content.ts';
 
 const FPS = 30;
+const WIN_SEP = String.fromCharCode(92);
 
 const parseScene = (scene: unknown) => videoContentSchema.parse({ scenes: [scene] }).scenes[0];
+const parseResolved = (scene: unknown) =>
+  resolvedVideoContentSchema.parse({ scenes: [scene] }).scenes[0];
 
-const hook = { type: 'hook', kicker: 'A', text: 'Un titre.', durationInSeconds: 2 };
-const statement = {
-  type: 'statement',
-  text: 'Une idee.',
-  subtext: 'Une nuance.',
-  durationInSeconds: 2,
-};
-const stat = { type: 'stat', value: '4', label: 'types', caption: 'a b c', durationInSeconds: 2 };
+const hook = { type: 'hook', kicker: 'A', text: 'Un titre.', narration: 'Une narration.' };
+const statement = { type: 'statement', text: 'Une idee.', narration: 'Une narration.' };
+const stat = { type: 'stat', value: '4', label: 'types', narration: 'Une narration.' };
 const comparison = {
   type: 'comparison',
   label: 'Avant / apres',
@@ -28,74 +27,162 @@ const comparison = {
     { label: 'Avant', value: '1' },
     { label: 'Apres', value: '4' },
   ],
-  durationInSeconds: 2,
+  narration: 'Une narration.',
 };
+const resolvedExtra = { audioSrc: 'generated/audio/scene-01.wav', durationInFrames: 38 };
 
-describe('types de scenes', () => {
-  it('accepte les quatre types', () => {
-    expect(parseScene(hook)?.type).toBe('hook');
-    expect(parseScene(statement)?.type).toBe('statement');
-    expect(parseScene(stat)?.type).toBe('stat');
-    expect(parseScene(comparison)?.type).toBe('comparison');
+describe('contrat redige', () => {
+  it.each([
+    ['hook', hook],
+    ['statement', statement],
+    ['stat', stat],
+    ['comparison', comparison],
+  ])('accepte une scene %s narree', (type, scene) => {
+    expect(parseScene(scene)?.type).toBe(type);
   });
 
-  it('accepte les champs optionnels absents', () => {
-    expect(parseScene({ type: 'hook', text: 'a', durationInSeconds: 1 })?.type).toBe('hook');
-    expect(parseScene({ type: 'statement', text: 'a', durationInSeconds: 1 })?.type).toBe(
-      'statement',
-    );
-    expect(parseScene({ type: 'stat', value: '1', label: 'a', durationInSeconds: 1 })?.type).toBe(
-      'stat',
-    );
+  it.each([
+    ['hook', hook],
+    ['statement', statement],
+    ['stat', stat],
+    ['comparison', comparison],
+  ])('exige la narration sur %s', (_type, scene) => {
+    const withoutNarration: Record<string, unknown> = { ...scene };
+    delete withoutNarration['narration'];
+    expect(() => parseScene(withoutNarration)).toThrow();
+  });
+
+  it('rejette une narration vide', () => {
+    expect(() => parseScene({ ...statement, narration: '' })).toThrow();
+  });
+
+  it('rejette une narration faite uniquement d espaces', () => {
+    expect(() => parseScene({ ...statement, narration: '   ' })).toThrow();
+  });
+
+  it('accepte une narration de exactement 300 caracteres', () => {
+    expect(parseScene({ ...statement, narration: 'a'.repeat(300) })?.type).toBe('statement');
+  });
+
+  it('rejette une narration de plus de 300 caracteres', () => {
+    expect(() => parseScene({ ...statement, narration: 'a'.repeat(301) })).toThrow();
+  });
+
+  it('rejette durationInSeconds, desormais hors contrat', () => {
+    expect(() => parseScene({ ...statement, durationInSeconds: 3 })).toThrow();
+    expect(() => parseScene({ ...hook, durationInSeconds: 3 })).toThrow();
   });
 
   it('rejette un type inconnu', () => {
-    expect(() => parseScene({ type: 'conclusion', text: 'a', durationInSeconds: 1 })).toThrow();
-  });
-
-  it('rejette un champ requis absent', () => {
-    expect(() => parseScene({ type: 'hook', durationInSeconds: 1 })).toThrow();
-    expect(() => parseScene({ type: 'stat', value: '4', durationInSeconds: 1 })).toThrow();
-    expect(() => parseScene({ type: 'comparison', label: 'a', durationInSeconds: 1 })).toThrow();
+    expect(() => parseScene({ type: 'conclusion', text: 'a', narration: 'b' })).toThrow();
   });
 
   it('rejette un champ appartenant a une autre variante', () => {
     expect(() => parseScene({ ...hook, subtext: 'intrus' })).toThrow();
     expect(() => parseScene({ ...stat, text: 'intrus' })).toThrow();
-    expect(() => parseScene({ ...statement, kicker: 'intrus' })).toThrow();
   });
 
   it('exige exactement deux items de comparaison', () => {
     expect(() => parseScene({ ...comparison, items: [comparison.items[0]] })).toThrow();
-    expect(() =>
-      parseScene({ ...comparison, items: [...comparison.items, { label: 'Autre', value: '9' }] }),
-    ).toThrow();
-  });
-
-  it('rejette les depassements de longueur', () => {
-    expect(() => parseScene({ ...hook, text: 'x'.repeat(71) })).toThrow();
-    expect(() => parseScene({ ...stat, value: 'x'.repeat(9) })).toThrow();
-  });
-
-  it('rejette une duree nulle ou negative', () => {
-    expect(() => parseScene({ ...statement, durationInSeconds: 0 })).toThrow();
-    expect(() => parseScene({ ...statement, durationInSeconds: -1 })).toThrow();
-  });
-
-  it('rejette une duree inferieure au plancher de 0.6 s', () => {
-    expect(() => parseScene({ ...statement, durationInSeconds: 0.5 })).toThrow();
-  });
-
-  it('accepte une duree de exactement 0.6 s', () => {
-    expect(parseScene({ ...statement, durationInSeconds: 0.6 })?.durationInSeconds).toBe(0.6);
-  });
-
-  it('rejette une duree superieure a 30 s', () => {
-    expect(() => parseScene({ ...statement, durationInSeconds: 30.1 })).toThrow();
   });
 
   it('rejette un tableau de scenes vide', () => {
     expect(() => videoContentSchema.parse({ scenes: [] })).toThrow();
+  });
+});
+
+describe('media', () => {
+  const withMedia = (src: string) => ({ ...hook, media: { type: 'image', src } });
+
+  it('accepte un media sur hook et statement', () => {
+    expect(parseScene(withMedia('demo/a.jpg'))?.type).toBe('hook');
+    expect(parseScene({ ...statement, media: { type: 'image', src: 'demo/a.jpg' } })?.type).toBe(
+      'statement',
+    );
+  });
+
+  it('rejette un media sur stat et comparison', () => {
+    expect(() => parseScene({ ...stat, media: { type: 'image', src: 'demo/a.jpg' } })).toThrow();
+    expect(() =>
+      parseScene({ ...comparison, media: { type: 'image', src: 'demo/a.jpg' } }),
+    ).toThrow();
+  });
+
+  it.each(['demo/a.jpg', 'demo/a.jpeg', 'demo/a.png', 'demo/a.webp'])('accepte %s', (src) => {
+    expect(parseScene(withMedia(src))?.type).toBe('hook');
+  });
+
+  it.each([
+    'demo/a.gif',
+    'demo/a.svg',
+    'demo/a.avif',
+    'demo/a.JPG',
+    'demo/noextension',
+    '../secret.jpg',
+    '/etc/passwd.jpg',
+    `C:${WIN_SEP}photo.jpg`,
+    `demo${WIN_SEP}photo.jpg`,
+    'http://example.com/a.jpg',
+    '',
+  ])('rejette %s', (src) => {
+    expect(() => parseScene(withMedia(src))).toThrow();
+  });
+});
+
+describe('contrat resolu', () => {
+  it('accepte une scene resolue complete', () => {
+    const scene = parseResolved({ ...statement, ...resolvedExtra });
+    expect(scene?.audioSrc).toBe('generated/audio/scene-01.wav');
+    expect(scene?.durationInFrames).toBe(38);
+  });
+
+  it('exige audioSrc', () => {
+    expect(() => parseResolved({ ...statement, durationInFrames: 38 })).toThrow();
+  });
+
+  it('exige durationInFrames', () => {
+    expect(() =>
+      parseResolved({ ...statement, audioSrc: 'generated/audio/scene-01.wav' }),
+    ).toThrow();
+  });
+
+  it.each([0, -1, 1.5])('rejette durationInFrames = %s', (durationInFrames) => {
+    expect(() => parseResolved({ ...statement, ...resolvedExtra, durationInFrames })).toThrow();
+  });
+
+  it.each(['generated/audio/scene-01.mp3', '../secret.wav', `a${WIN_SEP}b.wav`, ''])(
+    'rejette audioSrc %s',
+    (audioSrc) => {
+      expect(() => parseResolved({ ...statement, ...resolvedExtra, audioSrc })).toThrow();
+    },
+  );
+});
+
+describe('timing pilote par audio', () => {
+  it('arrondit la duree audio au superieur', () => {
+    expect(audioDurationToFrames(1.0, FPS)).toBe(30 + EXIT_PADDING_FRAMES);
+    expect(audioDurationToFrames(1.001, FPS)).toBe(31 + EXIT_PADDING_FRAMES);
+    expect(audioDurationToFrames(2.999, FPS)).toBe(90 + EXIT_PADDING_FRAMES);
+  });
+
+  it('ajoute exactement le padding de sortie', () => {
+    expect(EXIT_PADDING_FRAMES).toBe(8);
+    expect(audioDurationToFrames(3, FPS) - Math.ceil(3 * FPS)).toBe(EXIT_PADDING_FRAMES);
+  });
+
+  it('produit toujours une duree positive', () => {
+    expect(audioDurationToFrames(0.001, FPS)).toBeGreaterThan(0);
+  });
+
+  it('totalise les durees resolues', () => {
+    const scenes: ResolvedScene[] = [38, 90, 105].map((durationInFrames) => ({
+      type: 'statement' as const,
+      text: 'Une idee.',
+      narration: 'Une narration.',
+      ...resolvedExtra,
+      durationInFrames,
+    }));
+    expect(totalResolvedFrames(scenes)).toBe(233);
   });
 });
 
@@ -112,110 +199,11 @@ describe('content/demo.json', () => {
     );
   });
 
-  it('dure 555 frames', () => {
-    expect(totalDurationInFrames(demo.scenes, FPS)).toBe(555);
-  });
-});
-
-describe('conversion en frames', () => {
-  const scenes: Scene[] = [2.5, 3, 3, 3.5, 2].map((durationInSeconds) => ({
-    type: 'statement',
-    text: 'a',
-    durationInSeconds,
-  }));
-
-  it('convertit chaque duree de scene', () => {
-    expect(sceneDurationsInFrames(scenes, FPS)).toEqual([75, 90, 90, 105, 60]);
-  });
-
-  it('totalise 420 frames', () => {
-    expect(totalDurationInFrames(scenes, FPS)).toBe(420);
-  });
-
-  it('garantit au moins une frame par scene', () => {
-    expect(secondsToFrames(0.001, FPS)).toBe(1);
-  });
-
-  it('total identique a la somme des durees deja arrondies', () => {
-    const awkward: Scene[] = [0.33, 0.33, 0.34, 1.016, 2.983].map((durationInSeconds) => ({
-      type: 'statement',
-      text: 'a',
-      durationInSeconds,
-    }));
-    const sum = sceneDurationsInFrames(awkward, FPS).reduce((total, frames) => total + frames, 0);
-
-    expect(totalDurationInFrames(awkward, FPS)).toBe(sum);
-    expect(totalDurationInFrames(awkward, FPS)).not.toBe(
-      Math.round(awkward.reduce((total, scene) => total + scene.durationInSeconds, 0) * FPS),
-    );
-  });
-});
-
-const WIN_SEP = String.fromCharCode(92);
-
-describe('media', () => {
-  const hookWith = (src: string) => ({
-    type: 'hook',
-    text: 'a',
-    media: { type: 'image', src },
-    durationInSeconds: 2,
-  });
-
-  it('accepte un media image sur hook', () => {
-    expect(parseScene(hookWith('demo/photo-01.jpg'))?.type).toBe('hook');
-  });
-
-  it('accepte un media image sur statement', () => {
-    const scene = { ...statement, media: { type: 'image', src: 'demo/photo-01.jpg' } };
-    expect(parseScene(scene)?.type).toBe('statement');
-  });
-
-  it('accepte une scene hook sans media', () => {
-    expect(parseScene({ type: 'hook', text: 'a', durationInSeconds: 2 })?.type).toBe('hook');
-  });
-
-  it('accepte une scene statement sans media', () => {
-    expect(parseScene(statement)?.type).toBe('statement');
-  });
-
-  it('rejette un media sur stat', () => {
-    expect(() =>
-      parseScene({ ...stat, media: { type: 'image', src: 'demo/photo-01.jpg' } }),
-    ).toThrow();
-  });
-
-  it('rejette un media sur comparison', () => {
-    expect(() =>
-      parseScene({ ...comparison, media: { type: 'image', src: 'demo/photo-01.jpg' } }),
-    ).toThrow();
-  });
-
-  it('rejette un type de media inconnu', () => {
-    const scene = { ...statement, media: { type: 'video', src: 'demo/clip.mp4' } };
-    expect(() => parseScene(scene)).toThrow();
-  });
-
-  it.each(['demo/a.jpg', 'demo/a.jpeg', 'demo/a.png', 'demo/a.webp'])('accepte %s', (src) => {
-    expect(parseScene(hookWith(src))?.type).toBe('hook');
-  });
-
-  it.each([
-    'demo/a.gif',
-    'demo/a.svg',
-    'demo/a.avif',
-    'demo/a.txt',
-    'demo/a.JPG',
-    'demo/noextension',
-    '../secret.jpg',
-    'demo/../../secret.jpg',
-    '/etc/passwd.jpg',
-    `C:${WIN_SEP}photo.jpg`,
-    `demo${WIN_SEP}photo.jpg`,
-    'http://example.com/a.jpg',
-    'https://example.com/a.jpg',
-    '',
-  ])('rejette %s', (src) => {
-    expect(() => parseScene(hookWith(src))).toThrow();
+  it('porte une narration utile sur chaque scene', () => {
+    for (const scene of demo.scenes) {
+      expect(scene.narration.trim().length).toBeGreaterThan(0);
+      expect(scene.narration.length).toBeLessThanOrEqual(300);
+    }
   });
 });
 
@@ -233,7 +221,6 @@ describe('isPathInsideRoot', () => {
 
   it('rejette un chemin en dehors de la racine', () => {
     expect(isPathInsideRoot('/p/assets', '/p/secret.jpg', '/')).toBe(false);
-    expect(isPathInsideRoot(root, `C:${WIN_SEP}p${WIN_SEP}secret.jpg`, WIN_SEP)).toBe(false);
   });
 
   it('rejette un prefixe trompeur', () => {

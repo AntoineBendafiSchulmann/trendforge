@@ -1,7 +1,9 @@
 node_modules/
+.venv/
 dist/
 coverage/
 output/
+assets/generated/
 
 .cache/
 .vite/

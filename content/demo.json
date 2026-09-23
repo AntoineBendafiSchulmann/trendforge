@@ -4,28 +4,28 @@
       "type": "hook",
       "kicker": "ET SI...",
       "text": "Une ville entière tenait dans une seule tour ?",
-      "media": { "type": "image", "src": "demo/light-landscape.jpg" },
-      "durationInSeconds": 3
+      "narration": "Imaginez : au lieu de s'étaler sur des kilomètres, une ville entière se replie à la verticale, dans un seul bâtiment.",
+      "media": { "type": "image", "src": "demo/light-landscape.jpg" }
     },
     {
       "type": "statement",
       "text": "Chaque étage aurait son propre quartier.",
       "subtext": "Logements, commerces, jardins et lieux de travail.",
-      "durationInSeconds": 3
+      "narration": "En bas, les commerces. Plus haut, les logements. Et entre les deux, des jardins suspendus où l'on vient respirer."
     },
     {
       "type": "statement",
       "text": "Plus besoin de traverser la ville.",
       "subtext": "Tout serait accessible en quelques minutes.",
-      "media": { "type": "image", "src": "demo/mid-square.jpg" },
-      "durationInSeconds": 3.5
+      "narration": "Votre trajet du matin ne dépasserait jamais quelques étages. L'ascenseur remplacerait le métro.",
+      "media": { "type": "image", "src": "demo/mid-square.jpg" }
     },
     {
       "type": "stat",
       "value": "1",
       "label": "ville verticale",
       "caption": "des dizaines de quartiers superposés",
-      "durationInSeconds": 3
+      "narration": "Un seul édifice, mais des dizaines de quartiers empilés, chacun avec sa propre ambiance."
     },
     {
       "type": "comparison",
@@ -34,13 +34,13 @@
         { "label": "Horizontale", "value": "s'étendre" },
         { "label": "Verticale", "value": "s'élever" }
       ],
-      "durationInSeconds": 3.5
+      "narration": "La ville horizontale grignote les champs autour d'elle. La ville verticale, elle, ne prend que l'espace du ciel."
     },
     {
       "type": "statement",
       "text": "Une ville peut-elle vraiment pousser vers le ciel ?",
-      "media": { "type": "image", "src": "demo/deep-portrait.jpg" },
-      "durationInSeconds": 2.5
+      "narration": "Rien de tout cela n'existe encore. Mais l'idée, elle, continue de monter.",
+      "media": { "type": "image", "src": "demo/deep-portrait.jpg" }
     }
   ]
 }

@@ -1,7 +1,15 @@
-import { AbsoluteFill, Img, interpolate, staticFile, useCurrentFrame } from 'remotion';
+import {
+  AbsoluteFill,
+  Img,
+  interpolate,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from 'remotion';
 import type { Media } from '../src/content.ts';
 
-const ZOOM_TO = 1.06;
+const ZOOM_PER_SECOND = 0.02;
+const ZOOM_MAX = 1.25;
 
 export const MediaBackground = ({
   media,
@@ -11,7 +19,10 @@ export const MediaBackground = ({
   durationInFrames: number;
 }) => {
   const frame = useCurrentFrame();
-  const scale = interpolate(frame, [0, durationInFrames], [1, ZOOM_TO], {
+  const { fps } = useVideoConfig();
+
+  const target = Math.min(1 + ZOOM_PER_SECOND * (durationInFrames / fps), ZOOM_MAX);
+  const scale = interpolate(frame, [0, durationInFrames], [1, target], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
