@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import demoContent from '../content/demo.json' with { type: 'json' };
+import { OUTRO_DURATION_FRAMES } from '../src/config.ts';
 import {
   audioDurationToFrames,
   EXIT_PADDING_FRAMES,
@@ -477,16 +478,50 @@ describe('timing pilote par audio', () => {
   it('produit toujours une duree positive', () => {
     expect(audioDurationToFrames(0.001, FPS)).toBeGreaterThan(0);
   });
+});
 
-  it('totalise les durees resolues', () => {
-    const scenes: ResolvedScene[] = [38, 90, 105].map((durationInFrames) => ({
-      type: 'statement' as const,
-      text: 'Une idee.',
-      narration: 'Une narration.',
-      ...resolvedExtra,
-      durationInFrames,
-    }));
-    expect(totalResolvedFrames(scenes)).toBe(233);
+describe('outro fixe', () => {
+  const outro = { text: 'Abonne-toi pour la suite' };
+
+  it('accepte un contenu reduit a ses scenes', () => {
+    expect(videoContentSchema.parse({ scenes: [hook] }).scenes).toHaveLength(1);
+  });
+
+  it('rejette un champ outro dans le contenu redige', () => {
+    expect(() => videoContentSchema.parse({ scenes: [hook], outro })).toThrow();
+  });
+
+  it('rejette un champ outro dans le contenu resolu', () => {
+    expect(() =>
+      resolvedVideoContentSchema.parse({ scenes: [{ ...hook, ...resolvedExtra }], outro }),
+    ).toThrow();
+  });
+
+  it('rejette un champ outro meme vide', () => {
+    expect(() => videoContentSchema.parse({ scenes: [hook], outro: {} })).toThrow();
+  });
+});
+
+describe('duree totale', () => {
+  const scenes: ResolvedScene[] = [38, 90, 105].map((durationInFrames) => ({
+    type: 'statement' as const,
+    text: 'Une idee.',
+    narration: 'Une narration.',
+    ...resolvedExtra,
+    durationInFrames,
+  }));
+
+  it('ajoute toujours la duree de l outro fixe', () => {
+    expect(totalResolvedFrames(scenes)).toBe(233 + OUTRO_DURATION_FRAMES);
+  });
+
+  it('ajoute l outro meme sur une scene unique', () => {
+    expect(totalResolvedFrames(scenes.slice(0, 1))).toBe(38 + OUTRO_DURATION_FRAMES);
+  });
+
+  it('ne modifie aucune duree de scene', () => {
+    totalResolvedFrames(scenes);
+    expect(scenes.map((scene) => scene.durationInFrames)).toEqual([38, 90, 105]);
   });
 });
 

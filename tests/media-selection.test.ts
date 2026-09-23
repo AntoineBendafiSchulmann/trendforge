@@ -91,8 +91,11 @@ describe('coverScale', () => {
 });
 
 describe('selection image', () => {
-  // 1080 x 1.25 = 1350 et 1920 x 1.25 = 2400 : la frontiere tombe sur des entiers exacts.
-  const FRONTIERE = { width: 1350, height: 2400 };
+  // La frontiere derive du zoom maximal : tests/config.test.ts en verifie l exactitude entiere.
+  const FRONTIERE = {
+    width: CIBLE.width * MEDIA_BACKGROUND_MAX_ZOOM,
+    height: CIBLE.height * MEDIA_BACKGROUND_MAX_ZOOM,
+  };
 
   it('rejette tout candidat exigeant un agrandissement des le canvas', () => {
     const candidats = [image(1, 1080, 1919), image(2, 1600, 900), image(3, 1200, 1200)];
@@ -134,14 +137,14 @@ describe('selection image', () => {
   });
 
   it('prefere le ratio le plus proche du 9:16', () => {
-    const proche = image(2, 1350, 2400);
+    const proche = image(2, FRONTIERE.width, FRONTIERE.height);
     const loin = image(1, 3000, 4000);
     expect(selectPexelsImage([loin, proche], CIBLE).id).toBe(2);
     expect(selectPexelsImage([proche, loin], CIBLE).id).toBe(2);
   });
 
   it('a ratio egal, prefere la plus grande marge de resolution', () => {
-    const juste = image(1, 1350, 2400);
+    const juste = image(1, FRONTIERE.width, FRONTIERE.height);
     const ample = image(2, 2160, 3840);
     expect(selectPexelsImage([juste, ample], CIBLE).id).toBe(2);
     expect(selectPexelsImage([ample, juste], CIBLE).id).toBe(2);
@@ -156,7 +159,7 @@ describe('selection image', () => {
 
   it('donne le meme resultat quel que soit l ordre d entree', () => {
     const candidats = [
-      image(5, 1350, 2400),
+      image(5, FRONTIERE.width, FRONTIERE.height),
       image(2, 2160, 3840),
       image(9, 3000, 4000),
       image(1, 1440, 2560),

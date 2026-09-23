@@ -1,6 +1,22 @@
 {
   "version": 1,
   "entries": {
+    "image:giant residential tower": {
+      "provider": "pexels",
+      "query": "giant residential tower",
+      "providerAssetId": "38618077",
+      "sourcePage": "https://www.pexels.com/photo/modern-high-rise-building-in-chongqing-china-38618077/",
+      "credit": {
+        "name": "Mohamed  Does",
+        "url": "https://www.pexels.com/@mohamed-does-349386075"
+      },
+      "src": "generated/media/pexels-image-38618077.jpg",
+      "sha256": "40f6d62abfc4f0006f8cb0f250f0ff732e21307fcbd0e9e621411c7bf148fc9d",
+      "width": 2115,
+      "height": 3760,
+      "kind": "image",
+      "format": "jpeg"
+    },
     "image:green building facade": {
       "provider": "pexels",
       "query": "green building facade",
@@ -30,6 +46,22 @@
       "sha256": "3deb2007215b5d3da72e607adfcd0e8b458367327c6512ea8c9ea6333cd2f187",
       "width": 2252,
       "height": 4000,
+      "kind": "image",
+      "format": "jpeg"
+    },
+    "image:skyscraper in clouds": {
+      "provider": "pexels",
+      "query": "skyscraper in clouds",
+      "providerAssetId": "6776454",
+      "sourcePage": "https://www.pexels.com/photo/aerial-shot-of-city-buildings-6776454/",
+      "credit": {
+        "name": "Aleksandar Pasaric",
+        "url": "https://www.pexels.com/@apasaric"
+      },
+      "src": "generated/media/pexels-image-6776454.jpg",
+      "sha256": "7083194cf33c798a34b06cba34a552ed516cc6efb4647d1f93d897085e5e3df0",
+      "width": 4480,
+      "height": 7964,
       "kind": "image",
       "format": "jpeg"
     },
@@ -64,23 +96,6 @@
       "height": 5535,
       "kind": "image",
       "format": "jpeg"
-    },
-    "video:city skyline night": {
-      "provider": "pexels",
-      "query": "city skyline night",
-      "providerAssetId": "11335976",
-      "sourcePage": "https://www.pexels.com/video/skyscraper-at-night-11335976/",
-      "credit": {
-        "name": "Glenn Langhorst",
-        "url": "https://www.pexels.com/@glenn-langhorst-120487"
-      },
-      "src": "generated/media/pexels-video-11335976-4937456.mp4",
-      "sha256": "2995e8fd6700d56dbf8b4ae26fe28ae64b18dba5122754e8752af5deae245ee7",
-      "width": 1080,
-      "height": 1920,
-      "kind": "video",
-      "providerVariantId": "4937456",
-      "durationInSeconds": 11.933008
     }
   }
 }

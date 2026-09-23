@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OUTRO_DURATION_FRAMES } from './config.ts';
 
 export const EXIT_PADDING_FRAMES = 8;
 
@@ -153,8 +154,9 @@ export type CaptionCue = z.infer<typeof captionCueSchema>;
 export const audioDurationToFrames = (seconds: number, fps: number): number =>
   Math.ceil(seconds * fps) + EXIT_PADDING_FRAMES;
 
+// Toute composition TrendForge se termine par l'outro fixe.
 export const totalResolvedFrames = (scenes: readonly ResolvedScene[]): number =>
-  scenes.reduce((total, scene) => total + scene.durationInFrames, 0);
+  scenes.reduce((total, scene) => total + scene.durationInFrames, 0) + OUTRO_DURATION_FRAMES;
 
 export const isPathInsideRoot = (root: string, candidate: string, separator: string): boolean =>
   candidate === root || candidate.startsWith(root + separator);

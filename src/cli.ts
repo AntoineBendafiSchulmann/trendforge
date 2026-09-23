@@ -36,28 +36,30 @@ const inScene = async <T>(index: number, step: string, task: () => Promise<T>): 
   }
 };
 
-const checkMedia = async (medias: readonly (LocalMedia | undefined)[]): Promise<number> => {
+type NamedMedia = { label: string; media: LocalMedia | undefined };
+
+const checkMedia = async (entries: readonly NamedMedia[]): Promise<number> => {
   let checked = 0;
 
-  for (const [index, media] of medias.entries()) {
+  for (const { label, media } of entries) {
     if (media === undefined) continue;
 
     const src = media.src;
 
     const resolved = path.resolve(ASSETS_DIR, src);
     if (!isPathInsideRoot(ASSETS_DIR, resolved, path.sep)) {
-      throw new Error(`Scene ${index + 1} : media hors de assets/ (${src})`);
+      throw new Error(`${label} : media hors de assets/ (${src})`);
     }
 
     const info = await stat(resolved).catch(() => null);
     if (info === null) {
-      throw new Error(`Scene ${index + 1} : media introuvable (${src}) -> ${resolved}`);
+      throw new Error(`${label} : media introuvable (${src}) -> ${resolved}`);
     }
     if (!info.isFile()) {
-      throw new Error(`Scene ${index + 1} : media n'est pas un fichier (${src})`);
+      throw new Error(`${label} : media n'est pas un fichier (${src})`);
     }
     if (info.size === 0) {
-      throw new Error(`Scene ${index + 1} : media vide (${src})`);
+      throw new Error(`${label} : media vide (${src})`);
     }
 
     checked += 1;
@@ -139,7 +141,9 @@ const main = async (): Promise<void> => {
       lockFile: LOCK_FILE,
     },
   );
-  const verifies = await checkMedia(medias);
+  const verifies = await checkMedia(
+    medias.map((media, index) => ({ label: `Scene ${index + 1}`, media })),
+  );
   console.log(
     `Medias... ${verifies} verifies (${report.local} locaux, ${report.reused} verrouilles, ${report.fetched} telecharges)`,
   );

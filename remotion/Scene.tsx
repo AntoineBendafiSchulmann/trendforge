@@ -59,7 +59,7 @@ export const Scene = ({
         </AbsoluteFill>
       )}
       <div
-        className="relative flex w-full max-w-[900px] flex-col items-center gap-8 text-center"
+        className="relative flex w-full max-w-[900px] flex-col items-center gap-8 text-center text-shadow-[0_2px_10px_rgba(0,0,0,0.55)]"
         style={{ opacity: enter * exit, transform: `translateY(${(1 - lift) * 40}px)` }}
       >
         {renderScene(scene)}
