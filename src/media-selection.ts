@@ -2,7 +2,7 @@ import { MEDIA_BACKGROUND_MAX_ZOOM, type VideoFormat } from './config.ts';
 import type { PexelsImageCandidate, PexelsVideoCandidate, PexelsVideoFile } from './pexels.ts';
 
 const ACCEPTED_VIDEO_TYPE = 'video/mp4';
-const MAX_VARIANT_BYTES = 100_000_000;
+export const MAX_VARIANT_BYTES = 100_000_000;
 
 export type SelectedVideo = { candidate: PexelsVideoCandidate; file: PexelsVideoFile };
 
