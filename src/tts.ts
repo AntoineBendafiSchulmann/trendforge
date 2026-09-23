@@ -5,12 +5,18 @@ import path from 'node:path';
 const PIPER_PYTHON = path.resolve('.venv/Scripts/python.exe');
 const PIPER_MODEL = path.resolve('models/piper/fr_FR-siwis-medium/fr_FR-siwis-medium.onnx');
 const PIPER_CONFIG = `${PIPER_MODEL}.json`;
+const PIPER_ENV: NodeJS.ProcessEnv = { ...process.env, PYTHONIOENCODING: 'utf-8' };
 
 type RunResult = { code: number | null; stdout: string; stderr: string };
 
-const run = (command: string, args: readonly string[], input?: string): Promise<RunResult> =>
+const run = (
+  command: string,
+  args: readonly string[],
+  input?: string,
+  env?: NodeJS.ProcessEnv,
+): Promise<RunResult> =>
   new Promise((resolve, reject) => {
-    const child = spawn(command, [...args], { windowsHide: true });
+    const child = spawn(command, [...args], { windowsHide: true, env: env ?? process.env });
     let stdout = '';
     let stderr = '';
 
@@ -62,6 +68,7 @@ export const speak = async (text: string, outputPath: string): Promise<void> => 
     PIPER_PYTHON,
     ['-m', 'piper', '-m', PIPER_MODEL, '-f', outputPath],
     text,
+    PIPER_ENV,
   );
   if (code !== 0) {
     throw new Error(`Piper a echoue (code ${code}) : ${stderr.trim()}`);
