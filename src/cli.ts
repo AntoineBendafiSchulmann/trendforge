@@ -11,6 +11,8 @@ import {
   resolvedVideoContentSchema,
   totalResolvedFrames,
   videoContentSchema,
+  type LocalMedia,
+  type Media,
   type ResolvedScene,
   type Scene,
 } from './content.ts';
@@ -23,8 +25,18 @@ const ASSETS_DIR = path.resolve('assets');
 const AUDIO_DIR = path.resolve('assets/generated/audio');
 const OUTPUT_LOCATION = path.resolve('output/video-001.mp4');
 
-const mediaSrcOf = (scene: Scene): string | undefined =>
-  scene.type === 'hook' || scene.type === 'statement' ? scene.media?.src : undefined;
+const mediaOf = (scene: Scene): Media | undefined =>
+  scene.type === 'hook' || scene.type === 'statement' ? scene.media : undefined;
+
+const resolveMedia = (index: number, media: Media | undefined): LocalMedia | undefined => {
+  if (media === undefined) return undefined;
+  if (media.mode === 'search') {
+    throw new Error(
+      `Scene ${index + 1} : media search non supporte dans M7.0 (query "${media.query}")`,
+    );
+  }
+  return media;
+};
 
 const inScene = async <T>(index: number, step: string, task: () => Promise<T>): Promise<T> => {
   try {
@@ -39,8 +51,10 @@ const checkMedia = async (scenes: readonly Scene[]): Promise<number> => {
   let checked = 0;
 
   for (const [index, scene] of scenes.entries()) {
-    const src = mediaSrcOf(scene);
-    if (src === undefined) continue;
+    const media = resolveMedia(index, mediaOf(scene));
+    if (media === undefined) continue;
+
+    const src = media.src;
 
     const resolved = path.resolve(ASSETS_DIR, src);
     if (!isPathInsideRoot(ASSETS_DIR, resolved, path.sep)) {
@@ -103,12 +117,17 @@ const narrate = async (scenes: readonly Scene[]): Promise<ResolvedScene[]> => {
       console.log(`  Scene ${index + 1} : sous-titres indisponibles (${captions.skipped})`);
     }
 
-    resolved.push({
-      ...scene,
+    const resolvedFields = {
       audioSrc: `generated/audio/${name}`,
       durationInFrames,
       captions: captions.cues,
-    });
+    };
+
+    resolved.push(
+      scene.type === 'hook' || scene.type === 'statement'
+        ? { ...scene, ...resolvedFields, media: resolveMedia(index, scene.media) }
+        : { ...scene, ...resolvedFields },
+    );
   }
 
   const narrated = resolved.filter((scene) => scene.captions.length > 0).length;

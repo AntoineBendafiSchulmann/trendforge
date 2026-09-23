@@ -5,7 +5,7 @@
       "kicker": "ET SI...",
       "text": "Une ville entière tenait dans une seule tour ?",
       "narration": "Imaginez : au lieu de s'étaler sur des kilomètres, une ville entière se replie à la verticale, dans un seul bâtiment.",
-      "media": { "type": "image", "src": "demo/light-landscape.jpg" }
+      "media": { "mode": "local", "type": "image", "src": "demo/light-landscape.jpg" }
     },
     {
       "type": "statement",
@@ -18,7 +18,7 @@
       "text": "Plus besoin de traverser la ville.",
       "subtext": "Tout serait accessible en quelques minutes.",
       "narration": "Votre trajet du matin ne dépasserait jamais quelques étages. L'ascenseur remplacerait le métro.",
-      "media": { "type": "image", "src": "demo/mid-square.jpg" }
+      "media": { "mode": "local", "type": "image", "src": "demo/mid-square.jpg" }
     },
     {
       "type": "stat",
@@ -40,7 +40,7 @@
       "type": "statement",
       "text": "Une ville peut-elle vraiment pousser vers le ciel ?",
       "narration": "Rien de tout cela n'existe encore. Mais l'idée, elle, continue de monter.",
-      "media": { "type": "image", "src": "demo/deep-portrait.jpg" }
+      "media": { "mode": "local", "type": "image", "src": "demo/deep-portrait.jpg" }
     }
   ]
 }

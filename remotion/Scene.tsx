@@ -7,7 +7,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { EXIT_PADDING_FRAMES, type Media, type ResolvedScene } from '../src/content.ts';
+import { EXIT_PADDING_FRAMES, type LocalMedia, type ResolvedScene } from '../src/content.ts';
 import { Captions } from './Captions.tsx';
 import { MediaBackground } from './MediaBackground.tsx';
 import { ComparisonScene } from './scenes/ComparisonScene.tsx';
@@ -17,7 +17,7 @@ import { StatScene } from './scenes/StatScene.tsx';
 
 const ENTER_FRAMES = 8;
 
-const mediaOf = (scene: ResolvedScene): Media | undefined =>
+const mediaOf = (scene: ResolvedScene): LocalMedia | undefined =>
   scene.type === 'hook' || scene.type === 'statement' ? scene.media : undefined;
 
 const renderScene = (scene: ResolvedScene) => {

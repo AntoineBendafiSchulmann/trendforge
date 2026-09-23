@@ -95,21 +95,18 @@ describe('contrat redige', () => {
   });
 });
 
-describe('media', () => {
-  const withMedia = (src: string) => ({ ...hook, media: { type: 'image', src } });
+describe('media local', () => {
+  const local = (src: string) => ({ mode: 'local', type: 'image', src });
+  const withMedia = (src: string) => ({ ...hook, media: local(src) });
 
   it('accepte un media sur hook et statement', () => {
     expect(parseScene(withMedia('demo/a.jpg'))?.type).toBe('hook');
-    expect(parseScene({ ...statement, media: { type: 'image', src: 'demo/a.jpg' } })?.type).toBe(
-      'statement',
-    );
+    expect(parseScene({ ...statement, media: local('demo/a.jpg') })?.type).toBe('statement');
   });
 
   it('rejette un media sur stat et comparison', () => {
-    expect(() => parseScene({ ...stat, media: { type: 'image', src: 'demo/a.jpg' } })).toThrow();
-    expect(() =>
-      parseScene({ ...comparison, media: { type: 'image', src: 'demo/a.jpg' } }),
-    ).toThrow();
+    expect(() => parseScene({ ...stat, media: local('demo/a.jpg') })).toThrow();
+    expect(() => parseScene({ ...comparison, media: local('demo/a.jpg') })).toThrow();
   });
 
   it.each(['demo/a.jpg', 'demo/a.jpeg', 'demo/a.png', 'demo/a.webp'])('accepte %s', (src) => {
@@ -130,6 +127,89 @@ describe('media', () => {
     '',
   ])('rejette %s', (src) => {
     expect(() => parseScene(withMedia(src))).toThrow();
+  });
+
+  it('rejette l ancien format sans mode', () => {
+    expect(() => parseScene({ ...hook, media: { type: 'image', src: 'demo/a.jpg' } })).toThrow();
+  });
+
+  it('rejette un mode inconnu', () => {
+    expect(() =>
+      parseScene({ ...hook, media: { mode: 'remote', type: 'image', src: 'demo/a.jpg' } }),
+    ).toThrow();
+  });
+
+  it('rejette une query dans un media local', () => {
+    expect(() =>
+      parseScene({ ...hook, media: { ...local('demo/a.jpg'), query: 'paris' } }),
+    ).toThrow();
+  });
+});
+
+describe('media search', () => {
+  const search = (query: string, kind = 'image') => ({
+    ...hook,
+    media: { mode: 'search', kind, query },
+  });
+
+  it.each(['image', 'video'])('accepte kind %s', (kind) => {
+    expect(parseScene(search('Paris aerial night', kind))?.type).toBe('hook');
+  });
+
+  it.each([
+    ['accents francais', 'ville enneigee en hiver, a l aube'],
+    ['apostrophe ASCII', "coucher d'hiver"],
+    ['apostrophe typographique', 'coucher d’hiver'],
+    ['tiret', 'coucher-de-soleil'],
+    ['chiffres', 'skyline 2026'],
+    ['virgule', 'Paris, nuit'],
+    ['longueur maximale', 'a'.repeat(80)],
+  ])('accepte une query avec %s', (_nom, query) => {
+    expect(parseScene(search(query))?.type).toBe('hook');
+  });
+
+  it.each([
+    ['trop courte', 'ab'],
+    ['trop longue', 'a'.repeat(81)],
+    ['espaces seuls', '   '],
+    ['URL http', 'http://example.com/a.jpg'],
+    ['URL https', 'https://example.com/a.jpg'],
+    ['domaine nu', 'www.example.com'],
+    ['barre oblique', 'paris/nuit'],
+    ['deux-points', 'paris: nuit'],
+    ['chevrons', '<script>'],
+    ['point', 'paris.nuit'],
+  ])('rejette une query %s', (_nom, query) => {
+    expect(() => parseScene(search(query))).toThrow();
+  });
+
+  it('rejette un kind inconnu', () => {
+    expect(() => parseScene(search('Paris aerial night', 'audio'))).toThrow();
+  });
+
+  it('rejette src ou type dans un media search', () => {
+    expect(() =>
+      parseScene({
+        ...hook,
+        media: { mode: 'search', kind: 'image', query: 'paris', src: 'a.jpg' },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseScene({
+        ...hook,
+        media: { mode: 'search', kind: 'image', query: 'paris', type: 'image' },
+      }),
+    ).toThrow();
+  });
+
+  it('n atteint jamais le contrat resolu', () => {
+    expect(() =>
+      parseResolved({
+        ...statement,
+        ...resolvedExtra,
+        media: { mode: 'search', kind: 'image', query: 'paris' },
+      }),
+    ).toThrow();
   });
 });
 

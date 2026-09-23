@@ -4,11 +4,22 @@ export const EXIT_PADDING_FRAMES = 8;
 
 const MEDIA_SRC_PATTERN = /^[a-z0-9][a-z0-9/_-]*\.(?:jpe?g|png|webp)$/;
 const AUDIO_SRC_PATTERN = /^[a-z0-9][a-z0-9/_-]*\.wav$/;
+const QUERY_PATTERN = /^[\p{L}\p{N} ,'’-]+$/u;
+const QUERY_HAS_WORD = /[\p{L}\p{N}]/u;
 
-const mediaSchema = z.strictObject({
+const localMediaSchema = z.strictObject({
+  mode: z.literal('local'),
   type: z.literal('image'),
   src: z.string().min(1).max(200).regex(MEDIA_SRC_PATTERN),
 });
+
+const searchMediaSchema = z.strictObject({
+  mode: z.literal('search'),
+  kind: z.enum(['image', 'video']),
+  query: z.string().min(3).max(80).regex(QUERY_PATTERN).regex(QUERY_HAS_WORD),
+});
+
+const mediaSchema = z.discriminatedUnion('mode', [localMediaSchema, searchMediaSchema]);
 
 const narrationSchema = z.string().min(1).max(300).regex(/\S/);
 
@@ -94,10 +105,12 @@ const resolvedFields = {
   captions: z.array(captionCueSchema).max(120),
 };
 
+const resolvedMediaField = { media: localMediaSchema.optional() };
+
 const resolvedSceneSchema = z
   .discriminatedUnion('type', [
-    hookSceneSchema.extend(resolvedFields),
-    statementSceneSchema.extend(resolvedFields),
+    hookSceneSchema.extend(resolvedFields).extend(resolvedMediaField),
+    statementSceneSchema.extend(resolvedFields).extend(resolvedMediaField),
     statSceneSchema.extend(resolvedFields),
     comparisonSceneSchema.extend(resolvedFields),
   ])
@@ -109,6 +122,8 @@ export const resolvedVideoContentSchema = z.strictObject({
   scenes: z.array(resolvedSceneSchema).min(1).max(20),
 });
 
+export type LocalMedia = z.infer<typeof localMediaSchema>;
+export type SearchMedia = z.infer<typeof searchMediaSchema>;
 export type Media = z.infer<typeof mediaSchema>;
 export type HookScene = z.infer<typeof hookSceneSchema>;
 export type StatementScene = z.infer<typeof statementSceneSchema>;

@@ -6,7 +6,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import type { Media } from '../src/content.ts';
+import type { LocalMedia } from '../src/content.ts';
 
 const ZOOM_PER_SECOND = 0.02;
 const ZOOM_MAX = 1.25;
@@ -15,7 +15,7 @@ export const MediaBackground = ({
   media,
   durationInFrames,
 }: {
-  media: Media;
+  media: LocalMedia;
   durationInFrames: number;
 }) => {
   const frame = useCurrentFrame();
